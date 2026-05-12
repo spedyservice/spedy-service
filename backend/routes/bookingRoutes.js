@@ -10,7 +10,8 @@ const {
   getBookingStats,
   cancelBooking,
   addBookingReview,
-  getBookingsByDateRange
+  getBookingsByDateRange,
+  getPublicReviews          // ← import the new function
 } = require('../controllers/bookingController');
 const { protect, admin } = require('../middleware/auth');
 const { 
@@ -22,6 +23,9 @@ const {
 
 // Public routes
 router.post('/', createBookingValidation, createBooking);
+
+// ★ NEW public endpoint for testimonials
+router.get('/reviews/public', getPublicReviews);
 
 // Protected user routes
 router.get('/mybookings', protect, getMyBookings);

@@ -136,6 +136,7 @@ class EmailService {
     });
   }
 
+  // ── UPDATED: sendBookingStatusUpdate with review prompt on completion ──
   async sendBookingStatusUpdate(booking, customerEmail, oldStatus, newStatus) {
     const statusMessages = {
       confirmed: 'Your booking has been confirmed! A technician will be assigned soon.',
@@ -146,6 +147,12 @@ class EmailService {
     };
 
     const message = statusMessages[newStatus] || `Your booking status has been updated to ${newStatus}.`;
+
+    // If the service is completed, add a "Leave a Review" button
+    const reviewLink = `${process.env.FRONTEND_URL || 'http://localhost:5000'}/my-bookings`;
+    const reviewHtml = newStatus === 'completed' ? `
+      <p>We’d love to hear your feedback! <a href="${reviewLink}" style="color: #2563eb; font-weight: bold;">Leave a Review</a></p>
+    ` : '';
 
     const html = `
       <!DOCTYPE html>
@@ -162,6 +169,7 @@ class EmailService {
           .old-status { color: #6b7280; text-decoration: line-through; }
           .new-status { color: #10b981; font-weight: bold; font-size: 18px; }
           .footer { text-align: center; padding: 20px; font-size: 12px; color: #6b7280; }
+          .button { display: inline-block; padding: 10px 20px; background: #2563eb; color: white; text-decoration: none; border-radius: 8px; }
         </style>
       </head>
       <body>
@@ -182,6 +190,8 @@ class EmailService {
             <p><strong>Booking ID:</strong> ${booking.bookingId}</p>
             <p>${message}</p>
             
+            ${reviewHtml}
+
             ${booking.adminNotes ? `<p><strong>Admin Notes:</strong> ${booking.adminNotes}</p>` : ''}
           </div>
           <div class="footer">

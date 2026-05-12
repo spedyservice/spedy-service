@@ -24,7 +24,7 @@ const Footer = () => {
               </div>
               <div>
                 <h2 className="text-xl font-extrabold tracking-tight text-white">
-                  Speedy <span className="text-blue-400">Service</span>
+                  Spedy <span className="text-blue-400">Service</span>
                 </h2>
                 <p className="text-xs text-gray-400 mt-0.5">Repair &amp; Sales Center</p>
               </div>

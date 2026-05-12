@@ -1,13 +1,129 @@
 import React, { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import toast from 'react-hot-toast'
 import bookingService from '../services/bookingService'
-import { FaCalendarAlt, FaClock, FaMapMarkerAlt, FaWrench, FaEye, FaRupeeSign } from 'react-icons/fa'
+import {
+  FaCalendarAlt, FaClock, FaMapMarkerAlt, FaWrench,
+  FaEye, FaRupeeSign, FaStar, FaRegStar, FaTimes
+} from 'react-icons/fa'
+
+// ⭐ Review modal – reused for each booking
+const ReviewModal = ({ bookingId, isOpen, onClose, onReviewSubmitted }) => {
+  const [rating, setRating] = useState(0)
+  const [hoverRating, setHoverRating] = useState(0)
+  const [comment, setComment] = useState('')
+  const [submitting, setSubmitting] = useState(false)
+
+  useEffect(() => {
+    if (isOpen) {
+      // reset form when opened
+      setRating(0)
+      setHoverRating(0)
+      setComment('')
+    }
+  }, [isOpen])
+
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    if (rating === 0) {
+      toast.error('Please select a star rating')
+      return
+    }
+    setSubmitting(true)
+    try {
+      await bookingService.addReview(bookingId, rating, comment)
+      toast.success('Thank you for your feedback!')
+      onReviewSubmitted && onReviewSubmitted()
+      onClose()
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to submit review')
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  if (!isOpen) return null
+
+  return (
+    <AnimatePresence>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4"
+        onClick={onClose}
+      >
+        <motion.div
+          initial={{ scale: 0.95, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          exit={{ scale: 0.95, opacity: 0 }}
+          transition={{ type: 'spring', duration: 0.4 }}
+          className="bg-white rounded-2xl shadow-xl p-5 sm:p-6 w-full max-w-md"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-lg font-bold text-gray-900">Leave a Review</h2>
+            <button
+              onClick={onClose}
+              className="p-2 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100"
+            >
+              <FaTimes size={18} />
+            </button>
+          </div>
+
+          {/* Star rating */}
+          <div className="flex justify-center gap-1 mb-4">
+            {[1, 2, 3, 4, 5].map((star) => (
+              <button
+                key={star}
+                type="button"
+                onClick={() => setRating(star)}
+                onMouseEnter={() => setHoverRating(star)}
+                onMouseLeave={() => setHoverRating(0)}
+                className="text-3xl sm:text-4xl transition-colors p-1"
+                aria-label={`Rate ${star} star`}
+              >
+                {star <= (hoverRating || rating) ? (
+                  <FaStar className="text-yellow-400 drop-shadow" />
+                ) : (
+                  <FaRegStar className="text-gray-300 hover:text-yellow-400" />
+                )}
+              </button>
+            ))}
+          </div>
+
+          {/* Comment */}
+          <form onSubmit={handleSubmit}>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Your Review (optional)
+            </label>
+            <textarea
+              rows="3"
+              value={comment}
+              onChange={(e) => setComment(e.target.value)}
+              placeholder="Share your experience..."
+              className="w-full border border-gray-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none resize-none mb-4"
+            />
+
+            <button
+              type="submit"
+              disabled={submitting}
+              className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 text-white font-semibold py-2.5 rounded-lg transition-colors shadow-sm text-sm"
+            >
+              {submitting ? 'Submitting...' : 'Submit Review'}
+            </button>
+          </form>
+        </motion.div>
+      </motion.div>
+    </AnimatePresence>
+  )
+}
 
 const MyBookingsPage = () => {
   const [bookings, setBookings] = useState([])
   const [loading, setLoading] = useState(true)
+  const [reviewModal, setReviewModal] = useState({ open: false, bookingId: null })
 
   useEffect(() => {
     fetchBookings()
@@ -49,6 +165,19 @@ const MyBookingsPage = () => {
       rescheduled: 'Rescheduled'
     }
     return texts[status] || status
+  }
+
+  const openReviewModal = (bookingId) => {
+    setReviewModal({ open: true, bookingId })
+  }
+
+  const closeReviewModal = () => {
+    setReviewModal({ open: false, bookingId: null })
+  }
+
+  const handleReviewSubmitted = () => {
+    // Refresh the bookings to show updated status (the reviewed booking will no longer show the button because rating will exist)
+    fetchBookings()
   }
 
   if (loading) {
@@ -108,13 +237,26 @@ const MyBookingsPage = () => {
                         <h3 className="text-xl font-bold">{booking.productCategory}</h3>
                         <p className="text-gray-600">Brand: {booking.brandName}</p>
                       </div>
-                      <Link
-                        to={`/bookings/${booking._id}`}
-                        className="flex items-center space-x-2 px-4 py-2 border border-gray-300 rounded-lg hover:border-blue-600 hover:text-blue-600 transition-colors"
-                      >
-                        <FaEye className="text-sm" />
-                        <span>View Details</span>
-                      </Link>
+                      <div className="flex flex-wrap gap-2">
+                        <Link
+                          to={`/bookings/${booking._id}`}
+                          className="flex items-center space-x-2 px-4 py-2 border border-gray-300 rounded-lg hover:border-blue-600 hover:text-blue-600 transition-colors"
+                        >
+                          <FaEye className="text-sm" />
+                          <span>View Details</span>
+                        </Link>
+
+                        {/* ⭐ Add Review button – only for completed & not yet reviewed */}
+                        {booking.status === 'completed' && !booking.rating && (
+                          <button
+                            onClick={() => openReviewModal(booking._id)}
+                            className="flex items-center space-x-2 px-4 py-2 bg-yellow-50 border border-yellow-300 rounded-lg text-yellow-800 hover:bg-yellow-100 transition-colors"
+                          >
+                            <FaStar className="text-sm" />
+                            <span>Leave Review</span>
+                          </button>
+                        )}
+                      </div>
                     </div>
 
                     <div className="border-t border-gray-100 pt-4">
@@ -167,6 +309,18 @@ const MyBookingsPage = () => {
                       </div>
                     )}
 
+                    {/* Display existing review if present (already reviewed) */}
+                    {booking.rating && (
+                      <div className="mt-4 p-3 bg-yellow-50 rounded-lg">
+                        <div className="flex items-center mb-1">
+                          {[1,2,3,4,5].map(s => (
+                            <FaStar key={s} className={s <= booking.rating ? 'text-yellow-400' : 'text-gray-300'} />
+                          ))}
+                        </div>
+                        {booking.review && <p className="text-sm text-gray-700">{booking.review}</p>}
+                      </div>
+                    )}
+
                     {booking.adminNotes && (
                       <div className="mt-3 p-3 bg-blue-50 rounded-lg">
                         <p className="text-xs text-blue-600 font-semibold mb-1">Admin Note:</p>
@@ -180,6 +334,14 @@ const MyBookingsPage = () => {
           )}
         </motion.div>
       </div>
+
+      {/* ⭐ Review Modal */}
+      <ReviewModal
+        bookingId={reviewModal.bookingId}
+        isOpen={reviewModal.open}
+        onClose={closeReviewModal}
+        onReviewSubmitted={handleReviewSubmitted}
+      />
     </div>
   )
 }

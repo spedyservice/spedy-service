@@ -323,10 +323,14 @@ bookingSchema.statics.getDailyBookings = async function(days = 7) {
 // ============ VIRTUAL PROPERTIES ============
 
 bookingSchema.virtual('ageInDays').get(function() {
+  // Safe guard against missing createdAt
+  if (!this.createdAt) return null;
   return Math.ceil((Date.now() - this.createdAt) / (1000 * 60 * 60 * 24));
 });
 
 bookingSchema.virtual('formattedDate').get(function() {
+  // Safe guard against missing createdAt
+  if (!this.createdAt) return 'N/A';
   return this.createdAt.toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric' });
 });
 

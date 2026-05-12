@@ -482,6 +482,34 @@ const getBookingsByDateRange = async (req, res) => {
   }
 };
 
+/**
+ * @desc    Get public reviews from completed bookings (for testimonials)
+ * @route   GET /api/bookings/reviews/public
+ * @access  Public
+ */
+const getPublicReviews = async (req, res) => {
+  try {
+    const bookings = await Booking.find({
+      status: 'completed',
+      rating: { $ne: null },   // has a rating
+    })
+      .select('customerName rating review updatedAt')
+      .sort({ updatedAt: -1 })
+      .limit(20);               // max 20 most recent
+
+    res.json({
+      success: true,
+      data: bookings,
+    });
+  } catch (error) {
+    console.error('Get public reviews error:', error);
+    res.status(500).json({
+      success: false,
+      message: error.message || 'Failed to fetch reviews',
+    });
+  }
+};
+
 module.exports = {
   createBooking,
   getAllBookings,
@@ -492,5 +520,6 @@ module.exports = {
   cancelBooking,
   addBookingReview,
   getBookingStats,
-  getBookingsByDateRange
+  getBookingsByDateRange,
+  getPublicReviews
 };
