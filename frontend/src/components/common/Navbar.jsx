@@ -207,7 +207,7 @@ const Navbar = () => {
             <div className="flex-1 flex justify-center">
               <Link to="/">
                 <h1 className="text-lg font-extrabold tracking-tight text-gray-900">
-                  Speedy <span className="text-blue-900">Service</span>
+                  Spedy <span className="text-blue-900">Service</span>
                 </h1>
               </Link>
             </div>
@@ -258,7 +258,7 @@ const Navbar = () => {
           <div className="hidden lg:flex items-center justify-between py-3 sm:py-4">
             <Link to="/" className="flex-shrink-0 flex items-center">
               <h1 className="text-lg sm:text-xl font-extrabold tracking-tight text-gray-900">
-                Speedy <span className="text-blue-900">Service</span>
+                Spedy <span className="text-blue-900">Service</span>
               </h1>
             </Link>
 
