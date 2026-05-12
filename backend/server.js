@@ -41,7 +41,7 @@ const allowedOrigins = [
   'http://127.0.0.1:5000',
   /^http:\/\/192\.168\.\d+\.\d+:5000$/,
   /^http:\/\/10\.\d+\.\d+\.\d+:5000$/,
-  process.env.FRONTEND_URL        // your deployed frontend URL, e.g. https://speedyservice.com
+  process.env.FRONTEND_URL
 ].filter(Boolean);
 
 app.use(cors({
@@ -117,10 +117,9 @@ if (process.env.NODE_ENV === 'production') {
   const buildPath = path.join(__dirname, '..', 'frontend', 'dist');
   app.use(express.static(buildPath));
 
-  // For any route not handled by API, serve the React app's index.html
-  app.get('*', (req, res) => {
-    // Skip API routes – they’ve already been handled
-    if (req.url.startsWith('/api')) return;
+  // Catch‑all for client‑side routing (Express 5 compatible)
+  app.use((req, res) => {
+    if (req.path.startsWith('/api')) return;
     res.sendFile(path.join(buildPath, 'index.html'), (err) => {
       if (err) {
         res.status(500).send('Error loading the application');
@@ -132,7 +131,7 @@ if (process.env.NODE_ENV === 'production') {
   app.get('/', (req, res) => {
     res.json({
       success: true,
-      message: 'Welcome to Speedy Service API (Dev)',
+      message: 'Welcome to Spedy Service API (Dev)',
       version: '1.0.0',
       status: 'active'
     });
