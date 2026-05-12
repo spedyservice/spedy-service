@@ -1,15 +1,13 @@
 import axios from 'axios'
 
-// Use relative URL so Vite proxy handles API calls
-// This works on both desktop and mobile because the request goes to the same origin
-const API_URL = '/api'
+// In production, use the VITE_API_URL environment variable (e.g., your Render backend)
+// In development, use '/api' which is proxied by Vite to the backend
+const API_URL = import.meta.env.PROD
+  ? import.meta.env.VITE_API_URL || '/api'
+  : '/api'
 
 const api = axios.create({
   baseURL: API_URL,
-  // REMOVED the default 'Content-Type' header.
-  // Axios will automatically set the correct Content-Type:
-  // - 'application/json' for ordinary objects
-  // - 'multipart/form-data' (with boundary) for FormData
   timeout: 30000,
 })
 

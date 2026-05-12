@@ -12,6 +12,55 @@ import {
 import { motion, AnimatePresence } from 'framer-motion'
 import cartService from '../../services/cartService'
 
+// ── Extracted UserDropdown (stable component reference) ──
+const UserDropdown = ({ user, isAdmin, onLogout, onClose }) => {
+  const getInitials = (name) => {
+    if (!name) return 'U'
+    return name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2)
+  }
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: -8, scale: 0.97 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      exit={{ opacity: 0, y: -8, scale: 0.97 }}
+      className="absolute right-0 mt-2 w-72 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden z-[9999]"
+    >
+      <div className="px-4 py-4 flex items-center gap-3">
+        {user?.avatar ? (
+          <img src={user.avatar} alt="" className="w-11 h-11 rounded-full" />
+        ) : (
+          <div className="w-11 h-11 bg-blue-700 rounded-full flex items-center justify-center text-white font-bold text-lg">
+            {getInitials(user?.name)}
+          </div>
+        )}
+        <div>
+          <p className="text-sm font-bold truncate">{user?.name}</p>
+          <p className="text-xs text-gray-500 truncate">{user?.email}</p>
+        </div>
+      </div>
+      <div className="border-t border-gray-100" />
+      <div className="py-2">
+        {!isAdmin ? (
+          <>
+            <Link to="/my-bookings" onClick={onClose} className="flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50"><FaClipboardList className="text-gray-500"/> <span className="text-sm">My Bookings</span></Link>
+            <Link to="/my-orders" onClick={onClose} className="flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50"><FaShoppingBag className="text-gray-500"/> <span className="text-sm">My Orders</span></Link>
+            <Link to="/cart" onClick={onClose} className="flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50"><FaShoppingCart className="text-gray-500"/> <span className="text-sm">My Cart</span></Link>
+            <Link to="/profile" onClick={onClose} className="flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50"><FaUser className="text-gray-500"/> <span className="text-sm">My Profile</span></Link>
+            <Link to="/profile?tab=address" onClick={onClose} className="flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50"><FaMapMarkerAlt className="text-gray-500"/> <span className="text-sm">Saved Address</span></Link>
+            <Link to="/profile?tab=password" onClick={onClose} className="flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50"><FaKey className="text-gray-500"/> <span className="text-sm">Change Password</span></Link>
+          </>
+        ) : (
+          <Link to="/admin" onClick={onClose} className="flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50"><FaTachometerAlt className="text-gray-500"/> <span className="text-sm">Dashboard</span></Link>
+        )}
+      </div>
+      <div className="border-t border-gray-100" />
+      <button onClick={onLogout} className="w-full flex items-center gap-3 px-4 py-3 hover:bg-red-50 text-left"><FaSignOutAlt className="text-red-500"/> <span className="text-sm font-medium text-red-600">Logout</span></button>
+    </motion.div>
+  )
+}
+
+// ── Navbar component ──
 const topBarMessages = [
   'Free shipping on orders above ₹1000',
   'Genuine Products | GST Billing | Express Delivery',
@@ -82,8 +131,8 @@ const Navbar = () => {
     return () => clearInterval(id)
   }, [])
 
-  // -------- Hide MOBILE search bar on order & booking pages --------
-  const hideMobileSearchPaths = ['/cart', '/checkout', '/my-orders', '/order/', '/book-now', '/my-bookings', '/booking/']
+  // -------- Hide MOBILE search bar on order, booking, and shop pages --------
+  const hideMobileSearchPaths = ['/cart', '/checkout', '/my-orders', '/order/', '/book-now', '/my-bookings', '/booking/', '/shop']
   const hideMobileSearch = hideMobileSearchPaths.some(prefix => location.pathname.startsWith(prefix))
 
   const handleLogout = () => {
@@ -116,47 +165,6 @@ const Navbar = () => {
     if (!name) return 'U'
     return name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2)
   }
-
-  // ─── shared dropdown content ───
-  const UserDropdown = ({ setOpen }) => (
-    <motion.div
-      initial={{ opacity: 0, y: -8, scale: 0.97 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      exit={{ opacity: 0, y: -8, scale: 0.97 }}
-      className="absolute right-0 mt-2 w-72 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden z-[9999]"
-    >
-      <div className="px-4 py-4 flex items-center gap-3">
-        {user?.avatar ? (
-          <img src={user.avatar} alt="" className="w-11 h-11 rounded-full" />
-        ) : (
-          <div className="w-11 h-11 bg-blue-700 rounded-full flex items-center justify-center text-white font-bold text-lg">
-            {getInitials(user?.name)}
-          </div>
-        )}
-        <div>
-          <p className="text-sm font-bold truncate">{user?.name}</p>
-          <p className="text-xs text-gray-500 truncate">{user?.email}</p>
-        </div>
-      </div>
-      <div className="border-t border-gray-100" />
-      <div className="py-2">
-        {!isAdmin ? (
-          <>
-            <Link to="/my-bookings" onClick={() => setOpen(false)} className="flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50"><FaClipboardList className="text-gray-500"/> <span className="text-sm">My Bookings</span></Link>
-            <Link to="/my-orders" onClick={() => setOpen(false)} className="flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50"><FaShoppingBag className="text-gray-500"/> <span className="text-sm">My Orders</span></Link>
-            <Link to="/cart" onClick={() => setOpen(false)} className="flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50"><FaShoppingCart className="text-gray-500"/> <span className="text-sm">My Cart</span></Link>
-            <Link to="/profile" onClick={() => setOpen(false)} className="flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50"><FaUser className="text-gray-500"/> <span className="text-sm">My Profile</span></Link>
-            <Link to="/profile?tab=address" onClick={() => setOpen(false)} className="flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50"><FaMapMarkerAlt className="text-gray-500"/> <span className="text-sm">Saved Address</span></Link>
-            <Link to="/profile?tab=password" onClick={() => setOpen(false)} className="flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50"><FaKey className="text-gray-500"/> <span className="text-sm">Change Password</span></Link>
-          </>
-        ) : (
-          <Link to="/admin" onClick={() => setOpen(false)} className="flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50"><FaTachometerAlt className="text-gray-500"/> <span className="text-sm">Dashboard</span></Link>
-        )}
-      </div>
-      <div className="border-t border-gray-100" />
-      <button onClick={handleLogout} className="w-full flex items-center gap-3 px-4 py-3 hover:bg-red-50 text-left"><FaSignOutAlt className="text-red-500"/> <span className="text-sm font-medium text-red-600">Logout</span></button>
-    </motion.div>
-  )
 
   return (
     <>
@@ -199,7 +207,7 @@ const Navbar = () => {
             <div className="flex-1 flex justify-center">
               <Link to="/">
                 <h1 className="text-lg font-extrabold tracking-tight text-gray-900">
-                  Spedy <span className="text-blue-900">Service</span>
+                  Speedy <span className="text-blue-900">Service</span>
                 </h1>
               </Link>
             </div>
@@ -220,7 +228,14 @@ const Navbar = () => {
                     )}
                   </button>
                   <AnimatePresence>
-                    {isMobileDropdownOpen && <UserDropdown setOpen={setIsMobileDropdownOpen} />}
+                    {isMobileDropdownOpen && (
+                      <UserDropdown
+                        user={user}
+                        isAdmin={isAdmin}
+                        onLogout={handleLogout}
+                        onClose={() => setIsMobileDropdownOpen(false)}
+                      />
+                    )}
                   </AnimatePresence>
                 </div>
               ) : (
@@ -243,7 +258,7 @@ const Navbar = () => {
           <div className="hidden lg:flex items-center justify-between py-3 sm:py-4">
             <Link to="/" className="flex-shrink-0 flex items-center">
               <h1 className="text-lg sm:text-xl font-extrabold tracking-tight text-gray-900">
-                Spedy <span className="text-blue-900">Service</span>
+                Speedy <span className="text-blue-900">Service</span>
               </h1>
             </Link>
 
@@ -327,7 +342,14 @@ const Navbar = () => {
                     <FaChevronDown className={`text-gray-400 text-xs transition ${isDropdownOpen ? 'rotate-180' : ''}`} />
                   </button>
                   <AnimatePresence>
-                    {isDropdownOpen && <UserDropdown setOpen={setIsDropdownOpen} />}
+                    {isDropdownOpen && (
+                      <UserDropdown
+                        user={user}
+                        isAdmin={isAdmin}
+                        onLogout={handleLogout}
+                        onClose={() => setIsDropdownOpen(false)}
+                      />
+                    )}
                   </AnimatePresence>
                 </div>
               ) : (
@@ -344,7 +366,7 @@ const Navbar = () => {
           </div>
         </div>
 
-        {/* ═══════ Mobile search bar – hidden on order/booking pages ═══════ */}
+        {/* ═══════ Mobile search bar – hidden on order/booking/shop pages ═══════ */}
         {!hideMobileSearch && (
           <div className="lg:hidden border-t border-gray-200 px-4 py-2">
             <form onSubmit={handleSearch} className="flex items-center bg-gray-100 rounded-full px-3 py-2">

@@ -427,36 +427,49 @@ class EmailService {
     return this.sendEmail({ to: user.email, subject: 'Welcome to Speedy Service!', html });
   }
 
-  async sendPasswordResetEmail(user, resetToken) {
-    const resetUrl = `${process.env.FRONTEND_URL}/reset-password?token=${resetToken}`;
+  // ── UPDATED: Now sends a 6‑digit code instead of a link ──
+  async sendPasswordResetEmail(user, resetCode) {
     const html = `
       <!DOCTYPE html>
       <html>
-      <head><meta charset="UTF-8"><title>Password Reset</title>
+      <head>
+        <meta charset="UTF-8">
+        <title>Password Reset Code</title>
         <style>
           body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
           .container { max-width: 600px; margin: 0 auto; padding: 20px; }
           .header { background: #2563eb; color: white; padding: 20px; text-align: center; }
           .content { padding: 20px; background: #f9fafb; }
-          .button { display: inline-block; padding: 12px 24px; background: #2563eb; color: white; text-decoration: none; border-radius: 8px; }
+          .code { font-size: 32px; font-weight: bold; letter-spacing: 8px; color: #2563eb; text-align: center; margin: 20px 0; background: white; padding: 10px; border-radius: 8px; }
           .footer { text-align: center; padding: 20px; font-size: 12px; color: #6b7280; }
         </style>
       </head>
       <body>
         <div class="container">
-          <div class="header"><h1>Password Reset Request</h1></div>
+          <div class="header">
+            <h1>Speedy Service</h1>
+            <p>Password Reset Code</p>
+          </div>
           <div class="content">
             <p>Hello ${user.name},</p>
-            <p>You requested to reset your password. Click the button below:</p>
-            <p style="text-align: center;"><a href="${resetUrl}" class="button">Reset Password</a></p>
-            <p>This link will expire in 1 hour.</p>
+            <p>You requested to reset your password. Use the code below to complete the process:</p>
+            <div class="code">${resetCode}</div>
+            <p>This code will expire in 1 hour.</p>
+            <p>If you didn’t request a password reset, please ignore this email.</p>
           </div>
-          <div class="footer"><p>&copy; ${new Date().getFullYear()} Speedy Service</p></div>
+          <div class="footer">
+            <p>&copy; ${new Date().getFullYear()} Speedy Service</p>
+          </div>
         </div>
       </body>
       </html>
     `;
-    return this.sendEmail({ to: user.email, subject: 'Password Reset Request', html });
+
+    return this.sendEmail({
+      to: user.email,
+      subject: 'Your Password Reset Code',
+      html
+    });
   }
 
   async sendVerificationEmail(user, verificationToken) {

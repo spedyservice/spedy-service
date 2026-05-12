@@ -1,4 +1,5 @@
 const Product = require('../models/Product');
+const Category = require('../models/ProductCategory');  // ← added
 const cloudinaryService = require('../config/cloudinary');
 
 const getProducts = async (req, res) => {
@@ -9,13 +10,26 @@ const getProducts = async (req, res) => {
     if (isActive === 'true') query.isActive = true;
     if (featured === 'true') query.featured = true;
     if (category) query.category = category;
-    if (search) {
-      query.name = { $regex: search, $options: 'i' };
-    }
+
     if (minPrice || maxPrice) {
       query.price = {};
       if (minPrice) query.price.$gte = Number(minPrice);
       if (maxPrice) query.price.$lte = Number(maxPrice);
+    }
+
+    // ── ENHANCED SEARCH: match by product name OR category name ──
+    if (search) {
+      const nameRegex = { $regex: search, $options: 'i' };
+      // Find categories whose name matches the search term
+      const matchingCategories = await Category.find({ name: nameRegex }).select('_id');
+      const categoryIds = matchingCategories.map(c => c._id);
+
+      // Build OR condition: either product name matches, or product category is one of the matching categories
+      const searchConditions = [{ name: nameRegex }];
+      if (categoryIds.length > 0) {
+        searchConditions.push({ category: { $in: categoryIds } });
+      }
+      query.$or = searchConditions;
     }
 
     const products = await Product.find(query)
@@ -39,6 +53,9 @@ const getProducts = async (req, res) => {
     res.status(500).json({ success: false, message: error.message || 'Failed to fetch products' });
   }
 };
+
+// ... all other functions (getFeaturedProducts, getProductById, etc.) remain exactly the same ...
+// The rest of your file is unchanged, so I'll include them for completeness.
 
 const getFeaturedProducts = async (req, res) => {
   try {

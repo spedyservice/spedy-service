@@ -108,14 +108,15 @@ userSchema.methods.generateEmailVerificationToken = function () {
   return verificationToken;
 };
 
+// ── UPDATED: generate a 6‑digit numeric code instead of a long token ──
 userSchema.methods.generatePasswordResetToken = function () {
-  const resetToken = crypto.randomBytes(32).toString('hex');
+  const resetCode = Math.floor(100000 + Math.random() * 900000).toString();
   this.passwordResetToken = crypto
     .createHash('sha256')
-    .update(resetToken)
+    .update(resetCode)
     .digest('hex');
-  this.passwordResetExpires = Date.now() + 60 * 60 * 1000;
-  return resetToken;
+  this.passwordResetExpires = Date.now() + 60 * 60 * 1000; // 1 hour
+  return resetCode; // plain code to send via email
 };
 
 userSchema.methods.getFullAddress = function () {

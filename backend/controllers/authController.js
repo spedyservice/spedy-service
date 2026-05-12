@@ -174,7 +174,6 @@ const googleAuth = async (req, res) => {
         if (!user.emailVerified) user.emailVerified = true;
         await user.save();
       }
-      // If the user already has a googleId but was logging in again – no changes needed
     }
 
     // Update last login
@@ -203,8 +202,6 @@ const googleAuth = async (req, res) => {
     });
   }
 };
-
-// ─── (All other functions remain exactly as they were) ───
 
 /**
  * @desc    Get user profile
@@ -334,8 +331,10 @@ const changePassword = async (req, res) => {
   }
 };
 
+// ── UPDATED: Forgot & Reset Password with 6‑digit code ──
+
 /**
- * @desc    Forgot password - send reset email
+ * @desc    Forgot password – send a 6‑digit reset code via email
  * @route   POST /api/auth/forgot-password
  * @access  Public
  */
@@ -344,7 +343,6 @@ const forgotPassword = async (req, res) => {
     const { email } = req.body;
 
     const user = await User.findOne({ email: email.toLowerCase() });
-    
     if (!user) {
       return res.status(404).json({
         success: false,
@@ -352,51 +350,68 @@ const forgotPassword = async (req, res) => {
       });
     }
 
-    const resetToken = user.generatePasswordResetToken();
+    // Generate a 6‑digit code (plain code returned, hashed stored)
+    const resetCode = user.generatePasswordResetToken();
     await user.save();
 
-    await emailService.sendPasswordResetEmail(user, resetToken);
+    // Send the plain code via email
+    await emailService.sendPasswordResetEmail(user, resetCode);
 
     res.json({
       success: true,
-      message: 'Password reset email sent. Please check your inbox.'
+      message: 'Password reset code has been sent to your email.'
     });
   } catch (error) {
     console.error('Forgot password error:', error);
     res.status(500).json({
       success: false,
-      message: error.message || 'Failed to send reset email'
+      message: error.message || 'Failed to send reset code'
     });
   }
 };
 
 /**
- * @desc    Reset password with token
- * @route   POST /api/auth/reset-password/:token
+ * @desc    Reset password using the 6‑digit code
+ * @route   POST /api/auth/reset-password
  * @access  Public
  */
 const resetPassword = async (req, res) => {
   try {
-    const { token } = req.params;
-    const { password } = req.body;
+    const { code, password } = req.body;
 
-    const hashedToken = crypto
+    if (!code || !password) {
+      return res.status(400).json({
+        success: false,
+        message: 'Please provide the reset code and new password'
+      });
+    }
+
+    if (password.length < 6) {
+      return res.status(400).json({
+        success: false,
+        message: 'Password must be at least 6 characters'
+      });
+    }
+
+    // Hash the provided 6‑digit code to compare with the stored hash
+    const hashedCode = crypto
       .createHash('sha256')
-      .update(token)
+      .update(code)
       .digest('hex');
 
     const user = await User.findOne({
-      passwordResetToken: hashedToken,
+      passwordResetToken: hashedCode,
       passwordResetExpires: { $gt: Date.now() }
     });
 
     if (!user) {
       return res.status(400).json({
         success: false,
-        message: 'Invalid or expired reset token'
+        message: 'Invalid or expired reset code'
       });
     }
 
+    // Set the new password and clear reset fields
     user.password = password;
     user.passwordResetToken = undefined;
     user.passwordResetExpires = undefined;
@@ -404,7 +419,7 @@ const resetPassword = async (req, res) => {
 
     res.json({
       success: true,
-      message: 'Password reset successful. You can now login with your new password.'
+      message: 'Password has been reset successfully. You can now login.'
     });
   } catch (error) {
     console.error('Reset password error:', error);
@@ -505,7 +520,7 @@ const resendVerificationEmail = async (req, res) => {
 module.exports = {
   registerUser,
   loginUser,
-  googleAuth,            // ← new
+  googleAuth,
   getUserProfile,
   updateUserProfile,
   changePassword,

@@ -9,6 +9,8 @@ import BookNowPage from './pages/BookNowPage';
 import ContactPage from './pages/ContactPage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
+import ForgotPasswordPage from './pages/ForgotPasswordPage';
+import ResetPasswordPage from './pages/ResetPasswordPage';
 import MyBookingsPage from './pages/MyBookingsPage';
 import BookingDetailPage from './pages/BookingDetailPage';
 import ProfilePage from './pages/ProfilePage';
@@ -52,11 +54,19 @@ function App() {
   const isAdminRoute = adminRoutes.some((route) => location.pathname.startsWith(route));
   const shouldHideNavbarFooter = hideNavbarFooter.includes(location.pathname) || isAdminRoute;
 
+  // Hide footer on product detail, cart, checkout, order pages, and also on the listed pages
   const hideFooter =
     location.pathname.startsWith('/product/') ||
     location.pathname === '/cart' ||
     location.pathname === '/checkout' ||
-    location.pathname.startsWith('/order/');
+    location.pathname.startsWith('/order/') ||
+    location.pathname === '/shop' ||
+    location.pathname === '/services' ||
+    location.pathname === '/book-now' ||
+    location.pathname === '/contact' ||
+    location.pathname === '/my-bookings' ||
+    location.pathname === '/forgot-password' ||
+    location.pathname === '/reset-password';
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -95,6 +105,8 @@ function App() {
           <Route path="/contact" element={<ContactPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+          <Route path="/reset-password" element={<ResetPasswordPage />} />
 
           <Route
             path="/my-bookings"
