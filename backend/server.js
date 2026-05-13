@@ -84,6 +84,51 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 connectDB();
 
+// ──────────────────────────────────────────────
+// ✨ Lightweight In‑Memory Cache for Public Data
+// ──────────────────────────────────────────────
+const cacheStore = new Map();
+
+const cache = (ttlSeconds = 300) => {
+  return (req, res, next) => {
+    if (req.method !== 'GET') return next();
+    const key = req.originalUrl;
+    const now = Date.now();
+    const cached = cacheStore.get(key);
+
+    if (cached && cached.expiry > now) {
+      console.log(`⚡ Cache hit: ${key}`);
+      return res.status(200).json(cached.data);
+    }
+
+    // Override res.json to capture the response
+    const originalJson = res.json.bind(res);
+    res.json = (body) => {
+      if (res.statusCode === 200) {
+        cacheStore.set(key, {
+          data: body,
+          expiry: now + ttlSeconds * 1000
+        });
+      }
+      return originalJson(body);
+    };
+
+    next();
+  };
+};
+
+// Clear relevant cache when data might change (optional, but helps)
+// We'll not add invasive clear calls here; the TTL ensures freshness.
+
+// Apply cache to specific public routes
+app.use('/api/banners', cache(600));                  // 10 min
+app.use('/api/categories', cache(300));               // 5 min
+app.use('/api/brands', cache(300));
+app.use('/api/services', cache(300));
+app.use('/api/bookings/reviews/public', cache(120));  // 2 min
+app.use('/api/products', cache(120));                 // 2 min (for featured/search)
+app.use('/api/videos', cache(300));
+
 // ---------- API Routes ----------
 app.use('/api/auth', authRoutes);
 app.use('/api/bookings', bookingRoutes);
@@ -112,22 +157,30 @@ app.get('/health', (req, res) => {
   });
 });
 
-// ---------- PRODUCTION: serve React build ----------
+// ---------- PRODUCTION: serve React build with aggressive caching ----------
 if (process.env.NODE_ENV === 'production') {
   const buildPath = path.join(__dirname, '..', 'frontend', 'dist');
-  app.use(express.static(buildPath));
 
-  // Catch‑all for client‑side routing (Express 5 compatible)
+  // Cache static assets (JS/CSS/images) for 1 year (they have hashed names)
+  app.use(express.static(buildPath, {
+    maxAge: '1y',
+    immutable: true
+  }));
+
+  // Serve index.html without caching (so updates are reflected)
   app.use((req, res) => {
     if (req.path.startsWith('/api')) return;
-    res.sendFile(path.join(buildPath, 'index.html'), (err) => {
+    res.sendFile(path.join(buildPath, 'index.html'), {
+      headers: {
+        'Cache-Control': 'no-cache, no-store, must-revalidate'
+      }
+    }, (err) => {
       if (err) {
         res.status(500).send('Error loading the application');
       }
     });
   });
 } else {
-  // Development – friendly root message
   app.get('/', (req, res) => {
     res.json({
       success: true,
