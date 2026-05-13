@@ -96,9 +96,7 @@ const Testimonials = () => {
     <section className="py-12 sm:py-16 bg-gradient-to-b from-gray-50 to-white">
       <div className="container-custom max-w-6xl mx-auto px-4">
         <div className="text-center mb-8 sm:mb-10">
-          <span className="inline-block text-xs font-semibold uppercase tracking-[3px] text-blue-600 bg-blue-50 px-3 py-1 rounded-full">
-            Testimonials
-          </span>
+          
           <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mt-2 mb-1"
             style={{ fontFamily: "'Centrale Sans', sans-serif", fontWeight: 700 }}>
             What Our Customers Say

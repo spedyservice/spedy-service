@@ -67,11 +67,11 @@ const AdminLayout = ({ children }) => {
         <div className="flex-shrink-0">
           <div className="p-5 border-b border-white/20">
             <div className="flex items-center gap-2">
-              <div className="w-10 h-10 bg-orange-500 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-xl">HA</span>
+              <div className="w-10 h-10 bg-black rounded-lg flex items-center justify-center">
+                <span className="text-white font-bold text-xl">SS</span>
               </div>
               <div>
-                <h1 className="text-lg font-bold">Home Appliance</h1>
+                <h1 className="text-lg font-bold">Spedy Service</h1>
                 <p className="text-xs text-white/70">Admin Panel</p>
               </div>
             </div>

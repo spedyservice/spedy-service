@@ -103,23 +103,22 @@ const Footer = () => {
               <li className="flex items-start gap-3">
                 <FaPhone className="text-blue-500 mt-0.5 flex-shrink-0" />
                 <div>
-                  <p>+91 98093 37833</p>
-                  <p>+91 86173 60203</p>
+                  <p>+91 96093 37633</p>
                 </div>
               </li>
               <li className="flex items-start gap-3">
                 <FaEnvelope className="text-blue-500 mt-0.5 flex-shrink-0" />
-                <a href="mailto:support@speedyservice.in" className="hover:text-blue-400 transition-colors break-all">
-                  support@speedyservice.in
+                <a href="mailto:spedyservice40@gmail.com" className="hover:text-blue-400 transition-colors break-all">
+                  spedyservice40@gmail.com
                 </a>
               </li>
               <li className="flex items-start gap-3">
                 <FaMapMarkerAlt className="text-blue-500 mt-0.5 flex-shrink-0" />
-                <p>123 Main Street, Kolkata – 700001, West Bengal</p>
+                <p>Bardhaman Main Road, Kalna, Boher, West Bengal 713422</p>
               </li>
               <li className="flex items-center gap-3">
                 <FaClock className="text-blue-500 flex-shrink-0" />
-                <p>Mon – Sat: 9:00 AM – 8:00 PM</p>
+                <p>24 x 7 – Always Open</p>
               </li>
             </ul>
           </div>
@@ -127,7 +126,7 @@ const Footer = () => {
 
         {/* ── Bottom bar ── */}
         <div className="border-t border-white/10 mt-12 pt-6 flex flex-col sm:flex-row justify-between items-center gap-3 text-center text-xs text-gray-500">
-          <p>&copy; {currentYear} Speedy Service. All rights reserved.</p>
+          <p>&copy; {currentYear} Spedy Service. All rights reserved.</p>
           <div className="flex items-center gap-4">
             <Link to="/privacy-policy" className="hover:text-blue-400 transition-colors">
               Privacy Policy

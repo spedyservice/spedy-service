@@ -41,7 +41,7 @@ class EmailService {
 
     try {
       const mailOptions = {
-        from: process.env.EMAIL_FROM || `"Speedy Service" <${process.env.EMAIL_USER}>`,
+        from: process.env.EMAIL_FROM || `"Spedy Service" <${process.env.EMAIL_USER}>`,
         to: options.to,
         subject: options.subject,
         html: options.html,
@@ -83,12 +83,12 @@ class EmailService {
       <body>
         <div class="container">
           <div class="header">
-            <h1>Speedy Service</h1>
+            <h1>Spedy Service</h1>
             <p>Booking Confirmation</p>
           </div>
           <div class="content">
             <h2>Dear ${booking.customerName},</h2>
-            <p>Thank you for choosing Speedy Service! Your service request has been received and is being processed.</p>
+            <p>Thank you for choosing Spedy Service! Your service request has been received and is being processed.</p>
             
             <div class="booking-details">
               <h3>Booking Details:</h3>
@@ -112,7 +112,7 @@ class EmailService {
             <p>If you have any questions, please contact us at ${process.env.EMAIL_USER}</p>
           </div>
           <div class="footer">
-            <p>&copy; ${new Date().getFullYear()} Speedy Service. All rights reserved.</p>
+            <p>&copy; ${new Date().getFullYear()} Spedy Service. All rights reserved.</p>
             <p>This is an automated message, please do not reply.</p>
           </div>
         </div>
@@ -175,7 +175,7 @@ class EmailService {
       <body>
         <div class="container">
           <div class="header">
-            <h1>Speedy Service</h1>
+            <h1>Spedy Service</h1>
             <p>Booking Status Update</p>
           </div>
           <div class="content">
@@ -195,7 +195,7 @@ class EmailService {
             ${booking.adminNotes ? `<p><strong>Admin Notes:</strong> ${booking.adminNotes}</p>` : ''}
           </div>
           <div class="footer">
-            <p>&copy; ${new Date().getFullYear()} Speedy Service</p>
+            <p>&copy; ${new Date().getFullYear()} Spedy Service</p>
           </div>
         </div>
       </body>
@@ -246,7 +246,7 @@ class EmailService {
       <body>
         <div class="container">
           <div class="header">
-            <h1>Speedy Service</h1>
+            <h1>Spedy Service</h1>
             <p>Order Confirmation</p>
           </div>
           <div class="content">
@@ -294,7 +294,7 @@ class EmailService {
             <p>If you have any questions, contact us at ${process.env.EMAIL_USER}</p>
           </div>
           <div class="footer">
-            <p>&copy; ${new Date().getFullYear()} Speedy Service. All rights reserved.</p>
+            <p>&copy; ${new Date().getFullYear()} Spedy Service. All rights reserved.</p>
             <p>This is an automated message, please do not reply.</p>
           </div>
         </div>
@@ -349,7 +349,7 @@ class EmailService {
       <body>
         <div class="container">
           <div class="header">
-            <h1>Speedy Service</h1>
+            <h1>Spedy Service</h1>
             <p>Order Status Update</p>
           </div>
           <div class="content">
@@ -367,7 +367,7 @@ class EmailService {
             ${order.adminNotes ? `<p><strong>Admin Notes:</strong> ${order.adminNotes}</p>` : ''}
           </div>
           <div class="footer">
-            <p>&copy; ${new Date().getFullYear()} Speedy Service</p>
+            <p>&copy; ${new Date().getFullYear()} Spedy Service</p>
           </div>
         </div>
       </body>
@@ -389,7 +389,7 @@ class EmailService {
       <html>
       <head>
         <meta charset="UTF-8">
-        <title>Welcome to Speedy Service</title>
+        <title>Welcome to Spedy Service</title>
         <style>
           body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
           .container { max-width: 600px; margin: 0 auto; padding: 20px; }
@@ -402,11 +402,11 @@ class EmailService {
       <body>
         <div class="container">
           <div class="header">
-            <h1>Welcome to Speedy Service!</h1>
+            <h1>Welcome to Spedy Service!</h1>
           </div>
           <div class="content">
             <h2>Hello ${user.name},</h2>
-            <p>Thank you for registering with Speedy Service!</p>
+            <p>Thank you for registering with Spedy Service!</p>
             <p>With your account, you can:</p>
             <ul>
               <li>Book service requests online</li>
@@ -418,13 +418,13 @@ class EmailService {
             </p>
           </div>
           <div class="footer">
-            <p>&copy; ${new Date().getFullYear()} Speedy Service</p>
+            <p>&copy; ${new Date().getFullYear()} Spedy Service</p>
           </div>
         </div>
       </body>
       </html>
     `;
-    return this.sendEmail({ to: user.email, subject: 'Welcome to Speedy Service!', html });
+    return this.sendEmail({ to: user.email, subject: 'Welcome to Spedy Service!', html });
   }
 
   // ── UPDATED: Now sends a 6‑digit code instead of a link ──
@@ -447,7 +447,7 @@ class EmailService {
       <body>
         <div class="container">
           <div class="header">
-            <h1>Speedy Service</h1>
+            <h1>Spedy Service</h1>
             <p>Password Reset Code</p>
           </div>
           <div class="content">
@@ -458,7 +458,7 @@ class EmailService {
             <p>If you didn’t request a password reset, please ignore this email.</p>
           </div>
           <div class="footer">
-            <p>&copy; ${new Date().getFullYear()} Speedy Service</p>
+            <p>&copy; ${new Date().getFullYear()} Spedy Service</p>
           </div>
         </div>
       </body>
@@ -496,7 +496,7 @@ class EmailService {
             <p style="text-align: center;"><a href="${verifyUrl}" class="button">Verify Email</a></p>
             <p>This link expires in 24 hours.</p>
           </div>
-          <div class="footer"><p>&copy; ${new Date().getFullYear()} Speedy Service</p></div>
+          <div class="footer"><p>&copy; ${new Date().getFullYear()} Spedy Service</p></div>
         </div>
       </body>
       </html>

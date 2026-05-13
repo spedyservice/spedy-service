@@ -131,8 +131,8 @@ const Navbar = () => {
     return () => clearInterval(id)
   }, [])
 
-  // -------- Hide MOBILE search bar on order, booking, and shop pages --------
-  const hideMobileSearchPaths = ['/cart', '/checkout', '/my-orders', '/order/', '/book-now', '/my-bookings', '/booking/', '/shop']
+  // -------- Hide MOBILE search bar on order, booking, shop, and contact pages --------
+  const hideMobileSearchPaths = ['/cart', '/checkout', '/my-orders', '/order/', '/book-now', '/my-bookings', '/booking/', '/shop', '/contact']
   const hideMobileSearch = hideMobileSearchPaths.some(prefix => location.pathname.startsWith(prefix))
 
   const handleLogout = () => {
@@ -366,7 +366,7 @@ const Navbar = () => {
           </div>
         </div>
 
-        {/* ═══════ Mobile search bar – hidden on order/booking/shop pages ═══════ */}
+        {/* ═══════ Mobile search bar – hidden on order/booking/shop/contact pages ═══════ */}
         {!hideMobileSearch && (
           <div className="lg:hidden border-t border-gray-200 px-4 py-2">
             <form onSubmit={handleSearch} className="flex items-center bg-gray-100 rounded-full px-3 py-2">
