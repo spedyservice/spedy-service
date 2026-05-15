@@ -20,13 +20,13 @@ const GoogleLoginButton = () => {
         }
       }}
       onError={() => toast.error('Google sign-in was cancelled')}
-      ux_mode="popup"           // Force popup instead of iframe
+      ux_mode="popup"
       theme="outline"
       size="large"
       text="continue_with"
       shape="rectangular"
       logo_alignment="center"
-      useOneTap={false}         // Disable One Tap to avoid framing
+      useOneTap={false}
     />
   )
 }

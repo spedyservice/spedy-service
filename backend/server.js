@@ -29,18 +29,24 @@ const connectDB = require('./config/db');
 const app = express();
 
 // ---------- Security & Parsing ----------
-// Helmet with all features enabled EXCEPT X-Frame-Options and CSP (to allow Google OAuth popup)
+// Helmet with all policies disabled that could block Google OAuth
 app.use(helmet({
-  contentSecurityPolicy: false,       // Disable CSP completely
+  contentSecurityPolicy: false,
   crossOriginEmbedderPolicy: false,
   crossOriginOpenerPolicy: false,
   crossOriginResourcePolicy: false,
-  xFrameOptions: false,               // 🔥 CRITICAL: Remove X-Frame-Options (allows Google login popup)
+  xFrameOptions: false,
 }));
 
-// Explicitly remove any leftover X-Frame-Options header
+// 🔥 FORCEFULLY REMOVE ALL BLOCKING HEADERS
 app.use((req, res, next) => {
   res.removeHeader('X-Frame-Options');
+  res.removeHeader('Cross-Origin-Opener-Policy');
+  res.removeHeader('Cross-Origin-Embedder-Policy');
+  res.removeHeader('Cross-Origin-Resource-Policy');
+  // Also prevent any future headers from being set by accident
+  res.setHeader('Cross-Origin-Opener-Policy', 'unsafe-none');
+  res.setHeader('Cross-Origin-Embedder-Policy', 'unsafe-none');
   next();
 });
 
