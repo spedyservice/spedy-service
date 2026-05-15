@@ -17,14 +17,13 @@ const AuthCallbackPage = () => {
       return;
     }
 
-    // Save token immediately
     localStorage.setItem('token', token);
     
     api.get('/auth/profile')
       .then(response => {
         if (response.success && response.data) {
           const userData = response.data;
-          // ✅ CRITICAL: attach token to user object so AuthContext recognizes it
+          // ✅ ATTACH TOKEN
           userData.token = token;
           localStorage.setItem('user', JSON.stringify(userData));
           setUser(userData);

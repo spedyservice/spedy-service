@@ -19,8 +19,14 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     const initAuth = async () => {
+      const token = localStorage.getItem('token')
       const currentUser = authService.getCurrentUser()
-      if (currentUser && currentUser.token) {
+      
+      if (token && currentUser) {
+        // ✅ Fallback: ensure token is attached
+        if (!currentUser.token) {
+          currentUser.token = token
+        }
         setUser(currentUser)
         setIsAdmin(currentUser.role === 'admin')
       }
@@ -31,39 +37,46 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (email, password) => {
     try {
-      const data = await authService.login(email, password)
-      setUser(data)
-      setIsAdmin(data.role === 'admin')
-      toast.success('Login successful!')
-      return data
+      const response = await authService.login(email, password)
+      // response.data contains user with token
+      if (response.data) {
+        setUser(response.data)
+        setIsAdmin(response.data.role === 'admin')
+        toast.success('Login successful!')
+      }
+      return response.data
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Login failed')
+      toast.error(error.message || 'Login failed')
       throw error
     }
   }
 
   const googleLogin = async (credential) => {
     try {
-      const data = await authService.googleLogin(credential)
-      setUser(data)
-      setIsAdmin(data.role === 'admin')
-      toast.success('Welcome back')
-      return data
+      const response = await authService.googleLogin(credential)
+      if (response.data) {
+        setUser(response.data)
+        setIsAdmin(response.data.role === 'admin')
+        toast.success('Welcome back')
+      }
+      return response.data
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Google login failed')
+      toast.error(error.message || 'Google login failed')
       throw error
     }
   }
 
   const register = async (userData) => {
     try {
-      const data = await authService.register(userData)
-      setUser(data)
-      setIsAdmin(data.role === 'admin')
-      toast.success('Registration successful!')
-      return data
+      const response = await authService.register(userData)
+      if (response.data) {
+        setUser(response.data)
+        setIsAdmin(response.data.role === 'admin')
+        toast.success('Registration successful!')
+      }
+      return response.data
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Registration failed')
+      toast.error(error.message || 'Registration failed')
       throw error
     }
   }
@@ -77,12 +90,14 @@ export const AuthProvider = ({ children }) => {
 
   const updateProfile = async (userData) => {
     try {
-      const data = await authService.updateProfile(userData)
-      setUser(prev => ({ ...prev, ...data }))
-      toast.success('Profile updated successfully')
-      return data
+      const response = await authService.updateProfile(userData)
+      if (response.data) {
+        setUser(prev => ({ ...prev, ...response.data }))
+        toast.success('Profile updated successfully')
+      }
+      return response.data
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Failed to update profile')
+      toast.error(error.message || 'Failed to update profile')
       throw error
     }
   }
@@ -91,8 +106,8 @@ export const AuthProvider = ({ children }) => {
     user,
     loading,
     isAdmin,
-    setUser,      // ✅ Exposed for AuthCallbackPage
-    setIsAdmin,   // ✅ Exposed for AuthCallbackPage
+    setUser,
+    setIsAdmin,
     login,
     googleLogin,
     register,
