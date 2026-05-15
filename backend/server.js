@@ -117,9 +117,6 @@ const cache = (ttlSeconds = 300) => {
   };
 };
 
-// Clear relevant cache when data might change (optional, but helps)
-// We'll not add invasive clear calls here; the TTL ensures freshness.
-
 // Apply cache to specific public routes
 app.use('/api/banners', cache(600));                  // 10 min
 app.use('/api/categories', cache(300));               // 5 min
@@ -216,18 +213,43 @@ const server = app.listen(PORT, () => {
   console.log(`📍 CORS allowed origins: ${process.env.FRONTEND_URL || 'localhost'}`);
 });
 
-process.on('SIGTERM', () => {
-  server.close(() => {
-    mongoose.connection.close(false, () => process.exit(0));
+// ---------- 🔧 GRACEFUL SHUTDOWN for Mongoose 7+ (no callbacks) ----------
+const gracefulShutdown = async (signal) => {
+  console.log(`${signal} received. Closing server...`);
+  
+  // Stop accepting new connections
+  server.close(async (err) => {
+    if (err) {
+      console.error('Error closing server:', err);
+      process.exit(1);
+    }
+    
+    console.log('HTTP server closed.');
+    
+    try {
+      // Close MongoDB connection (Mongoose 7+ returns a Promise, no callback)
+      await mongoose.connection.close();
+      console.log('MongoDB connection closed.');
+      process.exit(0);
+    } catch (dbErr) {
+      console.error('Error closing MongoDB connection:', dbErr);
+      process.exit(1);
+    }
   });
+};
+
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+
+// Uncaught exceptions & rejections – log and gracefully shut down
+process.on('uncaughtException', async (err) => {
+  console.error('Uncaught Exception:', err);
+  await gracefulShutdown('uncaughtException');
 });
-process.on('uncaughtException', (err) => {
-  console.error('Uncaught Exception:', err.message);
-  process.exit(1);
-});
-process.on('unhandledRejection', (err) => {
-  console.error('Unhandled Rejection:', err.message);
-  process.exit(1);
+
+process.on('unhandledRejection', async (err) => {
+  console.error('Unhandled Rejection:', err);
+  await gracefulShutdown('unhandledRejection');
 });
 
 module.exports = app;
