@@ -616,8 +616,9 @@ const BookNowPage = () => {
     return null
   }
 
+  // ✅ FIX: Added top padding to clear fixed navbar
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-8 md:py-12">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 pt-[65px] md:pt-[80px] pb-8 md:pb-12">
       <div className="container-custom max-w-4xl mx-auto px-4">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
           <div className="text-center mb-6 md:mb-8">
