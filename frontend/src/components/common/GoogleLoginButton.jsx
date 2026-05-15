@@ -15,15 +15,18 @@ const GoogleLoginButton = () => {
           await googleLogin(credentialResponse.credential)
           navigate('/')
         } catch (error) {
+          console.error('Google login error:', error)
           toast.error('Google sign-in failed')
         }
       }}
       onError={() => toast.error('Google sign-in was cancelled')}
+      ux_mode="popup"           // Force popup instead of iframe
       theme="outline"
       size="large"
       text="continue_with"
       shape="rectangular"
       logo_alignment="center"
+      useOneTap={false}         // Disable One Tap to avoid framing
     />
   )
 }

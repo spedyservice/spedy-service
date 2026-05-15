@@ -61,8 +61,9 @@ const authService = {
     return response.data
   },
 
-  resetPassword: async (token, password) => {
-    const response = await api.post(`/auth/reset-password/${token}`, { password })
+  // ✅ Fixed — sends code in body, not in URL
+  resetPassword: async (code, password) => {
+    const response = await api.post('/auth/reset-password', { code, password })
     return response.data
   },
 

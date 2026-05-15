@@ -7,15 +7,19 @@ import App from './App'
 import { AuthProvider } from './context/AuthContext'
 import './index.css'
 
-const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || 'your-client-id.apps.googleusercontent.com'
+const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID
+
+if (!GOOGLE_CLIENT_ID) {
+  console.error('❌ VITE_GOOGLE_CLIENT_ID is not set in environment variables')
+}
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
-    <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
+    <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID || ''}>
       <BrowserRouter>
         <AuthProvider>
           <App />
-          <Toaster 
+          <Toaster
             position="top-right"
             toastOptions={{
               duration: 4000,

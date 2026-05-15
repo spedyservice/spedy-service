@@ -29,12 +29,22 @@ const connectDB = require('./config/db');
 const app = express();
 
 // ---------- Security & Parsing ----------
+// Helmet with all features enabled EXCEPT X-Frame-Options and CSP (to allow Google OAuth popup)
 app.use(helmet({
-  contentSecurityPolicy: false,
+  contentSecurityPolicy: false,       // Disable CSP completely
   crossOriginEmbedderPolicy: false,
+  crossOriginOpenerPolicy: false,
+  crossOriginResourcePolicy: false,
+  xFrameOptions: false,               // 🔥 CRITICAL: Remove X-Frame-Options (allows Google login popup)
 }));
 
-// CORS
+// Explicitly remove any leftover X-Frame-Options header
+app.use((req, res, next) => {
+  res.removeHeader('X-Frame-Options');
+  next();
+});
+
+// CORS – production & development
 const allowedOrigins = [
   'http://localhost:5000',
   'http://127.0.0.1:5000',
@@ -151,7 +161,7 @@ app.get('/health', (req, res) => {
   });
 });
 
-// ---------- Root Route (always respond, never sendFile) ----------
+// ---------- Root Route ----------
 app.get('/', (req, res) => {
   res.status(200).json({
     success: true,
