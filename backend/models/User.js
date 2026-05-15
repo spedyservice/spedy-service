@@ -26,8 +26,8 @@ const userSchema = new mongoose.Schema({
   },
   phone: {
     type: String,
-    unique: true,
-    sparse: true,
+    sparse: true,        // ✅ index only documents that have a phone number
+    // ❌ removed unique: true – we'll enforce uniqueness manually in controller
     match: [/^[0-9]{10}$/, 'Please add a valid 10-digit phone number']
   },
   password: {
@@ -75,7 +75,6 @@ const userSchema = new mongoose.Schema({
 });
 
 // ============ PRE-SAVE MIDDLEWARE ============
-
 userSchema.pre('save', async function () {
   if (!this.isModified('password') || !this.password) return;
   const salt = await bcrypt.genSalt(12);
@@ -83,7 +82,6 @@ userSchema.pre('save', async function () {
 });
 
 // ============ INSTANCE METHODS ============
-
 userSchema.methods.matchPassword = async function (enteredPassword) {
   if (!this.password) return false;
   return await bcrypt.compare(enteredPassword, this.password);
@@ -108,7 +106,6 @@ userSchema.methods.generateEmailVerificationToken = function () {
   return verificationToken;
 };
 
-// ── UPDATED: generate a 6‑digit numeric code instead of a long token ──
 userSchema.methods.generatePasswordResetToken = function () {
   const resetCode = Math.floor(100000 + Math.random() * 900000).toString();
   this.passwordResetToken = crypto
@@ -116,7 +113,7 @@ userSchema.methods.generatePasswordResetToken = function () {
     .update(resetCode)
     .digest('hex');
   this.passwordResetExpires = Date.now() + 60 * 60 * 1000; // 1 hour
-  return resetCode; // plain code to send via email
+  return resetCode;
 };
 
 userSchema.methods.getFullAddress = function () {
@@ -141,7 +138,6 @@ userSchema.methods.updateLastLogin = async function () {
 };
 
 // ============ STATIC METHODS ============
-
 userSchema.statics.findByEmailOrPhone = function (email, phone) {
   return this.findOne({
     $or: [{ email: email.toLowerCase() }, { phone: phone }]
@@ -175,7 +171,6 @@ userSchema.statics.getStats = async function () {
 };
 
 // ============ VIRTUAL PROPERTIES ============
-
 userSchema.virtual('bookings', {
   ref: 'Booking',
   localField: 'email',
@@ -208,6 +203,7 @@ userSchema.virtual('maskedPhone').get(function () {
 userSchema.index({ role: 1 });
 userSchema.index({ isActive: 1 });
 userSchema.index({ createdAt: -1 });
-userSchema.index({ googleId: 1 });
+// ❌ Removed duplicate index on googleId – already defined in field with unique:true, sparse:true
+// ✅ Keep only indexes that are not already covered by field definitions
 
 module.exports = mongoose.model('User', userSchema);

@@ -4,7 +4,7 @@ const router = express.Router();
 const {
   registerUser,
   loginUser,
-  googleAuth,           // keep existing for potential fallback
+  googleAuth,           // kept as fallback (optional)
   getUserProfile,
   updateUserProfile,
   changePassword,
@@ -16,30 +16,41 @@ const {
 const { protect } = require('../middleware/auth');
 const { registerValidation, loginValidation } = require('../middleware/validation');
 
-// Public routes
+// ========== PUBLIC ROUTES ==========
+
+// Email/Password registration and login
 router.post('/register', registerValidation, registerUser);
 router.post('/login', loginValidation, loginUser);
-router.post('/google', googleAuth);  // kept as backup
 
-// Google OAuth redirect and callback (NEW)
+// Google OAuth (popup fallback – optional)
+router.post('/google', googleAuth);
+
+// Google OAuth redirect (full page redirect flow)
 router.get('/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
 
+// Google OAuth callback – returns user with JWT token
 router.get(
   '/google/callback',
-  passport.authenticate('google', { session: true, failureRedirect: `${process.env.FRONTEND_URL}/login` }),
+  passport.authenticate('google', { session: false, failureRedirect: `${process.env.FRONTEND_URL}/login` }),
   (req, res) => {
-    // Successful authentication – redirect to frontend with token
-    const { token } = req.user;
+    const token = req.user.token;
+    if (!token) {
+      return res.redirect(`${process.env.FRONTEND_URL}/login?error=authentication_failed`);
+    }
+    // Redirect to frontend callback page with token
     res.redirect(`${process.env.FRONTEND_URL}/auth-callback?token=${token}`);
   }
 );
 
+// Password reset flow
 router.post('/forgot-password', forgotPassword);
 router.post('/reset-password', resetPassword);
+
+// Email verification
 router.get('/verify-email/:token', verifyEmail);
 router.post('/resend-verification', resendVerificationEmail);
 
-// Protected routes
+// ========== PROTECTED ROUTES (require login) ==========
 router.get('/profile', protect, getUserProfile);
 router.put('/profile', protect, updateUserProfile);
 router.put('/change-password', protect, changePassword);

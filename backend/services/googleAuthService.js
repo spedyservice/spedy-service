@@ -33,8 +33,11 @@ const initGoogleStrategy = () => {
             await user.save();
           }
 
+          // Generate token and attach to user object as a virtual property
           const token = generateToken(user._id, user.role);
-          return done(null, { user, token });
+          user.token = token; // attach token for later use
+
+          return done(null, user);
         } catch (error) {
           return done(error, null);
         }
@@ -42,8 +45,18 @@ const initGoogleStrategy = () => {
     )
   );
 
-  passport.serializeUser((data, done) => done(null, data));
-  passport.deserializeUser((data, done) => done(null, data));
+  passport.serializeUser((user, done) => {
+    done(null, user._id);
+  });
+
+  passport.deserializeUser(async (id, done) => {
+    try {
+      const user = await User.findById(id);
+      done(null, user);
+    } catch (err) {
+      done(err, null);
+    }
+  });
 };
 
 module.exports = { initGoogleStrategy };
