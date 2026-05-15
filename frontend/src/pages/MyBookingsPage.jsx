@@ -8,7 +8,7 @@ import {
   FaEye, FaRupeeSign, FaStar, FaRegStar, FaTimes
 } from 'react-icons/fa'
 
-// ⭐ Review modal – reused for each booking
+// Review modal (unchanged)
 const ReviewModal = ({ bookingId, isOpen, onClose, onReviewSubmitted }) => {
   const [rating, setRating] = useState(0)
   const [hoverRating, setHoverRating] = useState(0)
@@ -63,15 +63,10 @@ const ReviewModal = ({ bookingId, isOpen, onClose, onReviewSubmitted }) => {
         >
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-lg font-bold text-gray-900">Leave a Review</h2>
-            <button
-              onClick={onClose}
-              className="p-2 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100"
-            >
+            <button onClick={onClose} className="p-2 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100">
               <FaTimes size={18} />
             </button>
           </div>
-
-          {/* Star rating */}
           <div className="flex justify-center gap-1 mb-4">
             {[1, 2, 3, 4, 5].map((star) => (
               <button
@@ -81,7 +76,6 @@ const ReviewModal = ({ bookingId, isOpen, onClose, onReviewSubmitted }) => {
                 onMouseEnter={() => setHoverRating(star)}
                 onMouseLeave={() => setHoverRating(0)}
                 className="text-3xl sm:text-4xl transition-colors p-1"
-                aria-label={`Rate ${star} star`}
               >
                 {star <= (hoverRating || rating) ? (
                   <FaStar className="text-yellow-400 drop-shadow" />
@@ -91,8 +85,6 @@ const ReviewModal = ({ bookingId, isOpen, onClose, onReviewSubmitted }) => {
               </button>
             ))}
           </div>
-
-          {/* Comment */}
           <form onSubmit={handleSubmit}>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Your Review (optional)
@@ -104,7 +96,6 @@ const ReviewModal = ({ bookingId, isOpen, onClose, onReviewSubmitted }) => {
               placeholder="Share your experience..."
               className="w-full border border-gray-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none resize-none mb-4"
             />
-
             <button
               type="submit"
               disabled={submitting}
@@ -144,8 +135,8 @@ const MyBookingsPage = () => {
 
   const getStatusColor = (status) => {
     const colors = {
-      pending: 'bg-blue-100 text-blue-800',
-      confirmed: 'bg-blue-600 text-white',
+      pending: 'bg-amber-100 text-amber-800',
+      confirmed: 'bg-blue-100 text-blue-800',
       in_progress: 'bg-indigo-100 text-indigo-800',
       completed: 'bg-green-100 text-green-800',
       cancelled: 'bg-red-100 text-red-800',
@@ -190,139 +181,124 @@ const MyBookingsPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 pt-4 pb-12"> {/* <-- removed top padding, added small top padding */}
-      <div className="container-custom max-w-5xl mx-auto px-4">
+    <div className="min-h-screen bg-gray-50 pt-[65px] md:pt-[80px] pb-12">
+      <div className="container-custom max-w-6xl mx-auto px-4 sm:px-6">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
-          <div className="text-center mb-6 md:mb-8">
-            <h1 className="text-2xl md:text-4xl font-bold mb-2">
-              My <span className="text-blue-600">Bookings</span>
+          <div className="text-center mb-8 md:mb-10">
+            <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-1">
+              My <span className="text-blue-700">Bookings</span>
             </h1>
-            <p className="text-gray-600 text-sm md:text-base">Track and manage your service requests</p>
+            <p className="text-gray-500 text-sm">Track and manage your service requests</p>
           </div>
 
           {bookings.length === 0 ? (
-            <div className="bg-white rounded-2xl shadow-xl p-8 md:p-12 text-center">
+            <div className="bg-white rounded-2xl shadow-sm p-8 md:p-12 text-center">
               <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <FaCalendarAlt className="text-3xl text-gray-400" />
               </div>
               <h3 className="text-xl font-semibold mb-2">No Bookings Yet</h3>
               <p className="text-gray-600 mb-6">You haven't made any service bookings yet.</p>
-              <Link to="/book-now" className="btn-primary inline-block">
+              <Link to="/book-now" className="inline-block bg-blue-700 text-white px-6 py-2 rounded-lg hover:bg-blue-800 transition">
                 Book Your First Service
               </Link>
             </div>
           ) : (
-            <div className="space-y-4 md:space-y-6"> {/* reduced gap on mobile */}
+            <div className="space-y-4">
               {bookings.map((booking, index) => (
                 <motion.div
                   key={booking._id}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.1 }}
-                  className="bg-white rounded-xl md:rounded-2xl shadow-md hover:shadow-lg transition-shadow"
+                  transition={{ delay: index * 0.05 }}
+                  className="bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow border border-gray-100 overflow-hidden"
                 >
-                  <div className="p-4 md:p-6"> {/* reduced padding on mobile */}
-                    <div className="flex flex-wrap justify-between items-start gap-3 mb-3">
-                      <div>
-                        <div className="flex flex-wrap items-center gap-2 mb-1">
-                          <span className={`px-2 py-0.5 md:px-3 md:py-1 rounded-full text-xs font-semibold ${getStatusColor(booking.status)}`}>
-                            {getStatusText(booking.status)}
-                          </span>
-                          <span className="text-xs text-gray-500 font-mono">ID: {booking.bookingId}</span>
-                        </div>
-                        <h3 className="text-lg md:text-xl font-bold">{booking.productCategory}</h3>
-                        <p className="text-sm text-gray-600">Brand: {booking.brandName}</p>
+                  <div className="p-4 sm:p-5">
+                    <div className="flex flex-wrap items-start justify-between gap-2 mb-3">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${getStatusColor(booking.status)}`}>
+                          {getStatusText(booking.status)}
+                        </span>
+                        <span className="text-xs text-gray-500 font-mono">#{booking.bookingId}</span>
                       </div>
-                      <div className="flex flex-wrap gap-2">
+                      <div className="flex gap-2">
                         <Link
                           to={`/bookings/${booking._id}`}
-                          className="flex items-center space-x-1 px-3 py-1.5 md:px-4 md:py-2 border border-gray-300 rounded-lg hover:border-blue-600 hover:text-blue-600 transition-colors text-sm"
+                          className="inline-flex items-center gap-1 text-sm text-gray-600 hover:text-blue-700 transition-colors"
                         >
-                          <FaEye className="text-xs" />
+                          <FaEye size={12} />
                           <span>View</span>
                         </Link>
-
                         {booking.status === 'completed' && !booking.rating && (
                           <button
                             onClick={() => openReviewModal(booking._id)}
-                            className="flex items-center space-x-1 px-3 py-1.5 md:px-4 md:py-2 bg-yellow-50 border border-yellow-300 rounded-lg text-yellow-800 hover:bg-yellow-100 transition-colors text-sm"
+                            className="inline-flex items-center gap-1 text-sm text-yellow-700 hover:text-yellow-800 transition-colors"
                           >
-                            <FaStar className="text-sm" />
+                            <FaStar size={12} />
                             <span>Review</span>
                           </button>
                         )}
                       </div>
                     </div>
 
-                    <div className="border-t border-gray-100 pt-3 md:pt-4">
-                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
-                        <div className="flex items-center space-x-2">
-                          <FaCalendarAlt className="text-blue-600 text-sm" />
-                          <div>
-                            <p className="text-xs text-gray-500">Date</p>
-                            <p className="text-sm font-medium">{new Date(booking.preferredDate).toLocaleDateString('en-IN')}</p>
-                          </div>
+                    <div className="mb-3">
+                      <h3 className="text-base font-semibold text-gray-900">{booking.productCategory}</h3>
+                      <p className="text-xs text-gray-500">Brand: {booking.brandName}</p>
+                    </div>
+
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-3 text-sm">
+                      <div className="flex items-center gap-1.5">
+                        <FaCalendarAlt className="text-blue-600 text-xs" />
+                        <div>
+                          <p className="text-xs text-gray-500 leading-tight">Date</p>
+                          <p className="text-sm font-medium">{new Date(booking.preferredDate).toLocaleDateString('en-IN')}</p>
                         </div>
-                        <div className="flex items-center space-x-2">
-                          <FaClock className="text-blue-600 text-sm" />
-                          <div>
-                            <p className="text-xs text-gray-500">Time</p>
-                            <p className="text-sm font-medium">{booking.timeSlot}</p>
-                          </div>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <FaClock className="text-blue-600 text-xs" />
+                        <div>
+                          <p className="text-xs text-gray-500 leading-tight">Time</p>
+                          <p className="text-sm font-medium truncate">{booking.timeSlot}</p>
                         </div>
-                        <div className="flex items-center space-x-2 col-span-1 sm:col-span-2 md:col-span-1">
-                          <FaMapMarkerAlt className="text-blue-600 text-sm" />
-                          <div className="truncate">
-                            <p className="text-xs text-gray-500">Location</p>
-                            <p className="text-sm truncate">{booking.address}</p>
-                          </div>
+                      </div>
+                      <div className="flex items-center gap-1.5 col-span-2 sm:col-span-2">
+                        <FaMapMarkerAlt className="text-blue-600 text-xs flex-shrink-0" />
+                        <div>
+                          <p className="text-xs text-gray-500 leading-tight">Location</p>
+                          <p className="text-sm text-gray-700 truncate">{booking.address}</p>
                         </div>
                       </div>
                     </div>
 
-                    {booking.finalAmount > 0 && (
-                      <div className="mt-3 p-2 md:p-3 bg-green-50 rounded-lg">
-                        <div className="flex items-center space-x-2">
-                          <FaRupeeSign className="text-green-600" />
-                          <div>
-                            <p className="text-xs text-green-600 font-semibold">Final Amount</p>
-                            <p className="text-base font-bold text-green-700">₹{booking.finalAmount}</p>
-                          </div>
-                        </div>
+                    {booking.issueDescription && (
+                      <div className="mt-2 pt-2 border-t border-gray-100 flex items-start gap-2">
+                        <FaWrench className="text-blue-600 text-xs mt-0.5 flex-shrink-0" />
+                        <p className="text-xs text-gray-600">{booking.issueDescription}</p>
                       </div>
                     )}
 
-                    {booking.issueDescription && (
-                      <div className="mt-3 p-2 md:p-3 bg-gray-50 rounded-lg">
-                        <div className="flex items-start space-x-2">
-                          <FaWrench className="text-blue-600 mt-0.5 text-sm" />
-                          <div>
-                            <p className="text-xs text-gray-500">Issue</p>
-                            <p className="text-sm text-gray-700">{booking.issueDescription}</p>
-                          </div>
-                        </div>
+                    {booking.finalAmount > 0 && (
+                      <div className="mt-3 inline-flex items-center gap-1 bg-green-50 text-green-700 px-2 py-1 rounded-md text-xs font-medium">
+                        <FaRupeeSign size={10} />
+                        <span>₹{booking.finalAmount}</span>
                       </div>
                     )}
 
                     {booking.rating && (
-                      <div className="mt-3 p-2 md:p-3 bg-yellow-50 rounded-lg">
-                        <div className="flex items-center mb-1">
-                          {[1,2,3,4,5].map(s => (
-                            <FaStar key={s} className={s <= booking.rating ? 'text-yellow-400 text-sm' : 'text-gray-300 text-sm'} />
-                          ))}
-                        </div>
-                        {booking.review && <p className="text-sm text-gray-700">{booking.review}</p>}
+                      <div className="mt-3 flex items-center gap-1">
+                        {[1,2,3,4,5].map(s => (
+                          <FaStar key={s} className={`w-3 h-3 ${s <= booking.rating ? 'text-yellow-500' : 'text-gray-300'}`} />
+                        ))}
+                        {booking.review && <span className="text-xs text-gray-500 ml-2">{booking.review}</span>}
                       </div>
                     )}
 
                     {booking.adminNotes && (
-                      <div className="mt-3 p-2 md:p-3 bg-blue-50 rounded-lg">
-                        <p className="text-xs text-blue-600 font-semibold mb-1">Admin Note:</p>
-                        <p className="text-sm text-blue-800">{booking.adminNotes}</p>
+                      <div className="mt-3 text-xs text-blue-700 bg-blue-50 p-2 rounded-md">
+                        <span className="font-semibold">Note:</span> {booking.adminNotes}
                       </div>
                     )}
                   </div>
