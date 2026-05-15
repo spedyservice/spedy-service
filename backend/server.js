@@ -16,7 +16,6 @@ const serviceRoutes = require('./routes/serviceRoutes');
 const brandRoutes = require('./routes/brandRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const settingRoutes = require('./routes/settingRoutes');
-
 const productRoutes = require('./routes/productRoutes');
 const productCategoryRoutes = require('./routes/productCategoryRoutes');
 const cartRoutes = require('./routes/cartRoutes');
@@ -35,7 +34,7 @@ app.use(helmet({
   crossOriginEmbedderPolicy: false,
 }));
 
-// CORS – production & development
+// CORS
 const allowedOrigins = [
   'http://localhost:5000',
   'http://127.0.0.1:5000',
@@ -45,7 +44,7 @@ const allowedOrigins = [
 ].filter(Boolean);
 
 app.use(cors({
-  origin: function(origin, callback) {
+  origin: function (origin, callback) {
     if (!origin) return callback(null, true);
     if (allowedOrigins.some(pattern =>
       typeof pattern === 'string' ? pattern === origin : pattern.test(origin)
@@ -79,13 +78,12 @@ if (process.env.NODE_ENV === 'development') {
   app.use(morgan('combined'));
 }
 
-// Serve static uploads (local dev)
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 connectDB();
 
 // ──────────────────────────────────────────────
-// ✨ Lightweight In‑Memory Cache for Public Data
+// ✨ Lightweight In-Memory Cache for Public Data
 // ──────────────────────────────────────────────
 const cacheStore = new Map();
 
@@ -101,7 +99,6 @@ const cache = (ttlSeconds = 300) => {
       return res.status(200).json(cached.data);
     }
 
-    // Override res.json to capture the response
     const originalJson = res.json.bind(res);
     res.json = (body) => {
       if (res.statusCode === 200) {
@@ -117,13 +114,13 @@ const cache = (ttlSeconds = 300) => {
   };
 };
 
-// Apply cache to specific public routes
-app.use('/api/banners', cache(600));                  // 10 min
-app.use('/api/categories', cache(300));               // 5 min
+// Apply cache to public routes
+app.use('/api/banners', cache(600));
+app.use('/api/categories', cache(300));
 app.use('/api/brands', cache(300));
 app.use('/api/services', cache(300));
-app.use('/api/bookings/reviews/public', cache(120));  // 2 min
-app.use('/api/products', cache(120));                 // 2 min (for featured/search)
+app.use('/api/bookings/reviews/public', cache(120));
+app.use('/api/products', cache(120));
 app.use('/api/videos', cache(300));
 
 // ---------- API Routes ----------
@@ -141,7 +138,7 @@ app.use('/api/reviews', reviewRoutes);
 app.use('/api/banners', bannerRoutes);
 app.use('/api/videos', videoRoutes);
 
-// Health check
+// ---------- Health Check ----------
 app.get('/health', (req, res) => {
   res.status(200).json({
     success: true,
@@ -154,41 +151,18 @@ app.get('/health', (req, res) => {
   });
 });
 
-// ---------- PRODUCTION: serve React build with aggressive caching ----------
-if (process.env.NODE_ENV === 'production') {
-  const buildPath = path.join(__dirname, '..', 'frontend', 'dist');
-
-  // Cache static assets (JS/CSS/images) for 1 year (they have hashed names)
-  app.use(express.static(buildPath, {
-    maxAge: '1y',
-    immutable: true
-  }));
-
-  // Serve index.html without caching (so updates are reflected)
-  app.use((req, res) => {
-    if (req.path.startsWith('/api')) return;
-    res.sendFile(path.join(buildPath, 'index.html'), {
-      headers: {
-        'Cache-Control': 'no-cache, no-store, must-revalidate'
-      }
-    }, (err) => {
-      if (err) {
-        res.status(500).send('Error loading the application');
-      }
-    });
+// ---------- Root Route (always respond, never sendFile) ----------
+app.get('/', (req, res) => {
+  res.status(200).json({
+    success: true,
+    message: 'Welcome to Spedy Service API',
+    version: '1.0.0',
+    status: 'active',
+    environment: process.env.NODE_ENV
   });
-} else {
-  app.get('/', (req, res) => {
-    res.json({
-      success: true,
-      message: 'Welcome to Spedy Service API (Dev)',
-      version: '1.0.0',
-      status: 'active'
-    });
-  });
-}
+});
 
-// ---------- Error handlers ----------
+// ---------- 404 Handler ----------
 app.use((req, res) => {
   res.status(404).json({
     success: false,
@@ -197,6 +171,7 @@ app.use((req, res) => {
   });
 });
 
+// ---------- Global Error Handler ----------
 app.use((err, req, res, next) => {
   console.error('Error:', err.message);
   res.status(err.statusCode || 500).json({
@@ -207,27 +182,23 @@ app.use((err, req, res, next) => {
   });
 });
 
+// ---------- Start Server ----------
 const PORT = process.env.PORT || 5001;
 const server = app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
   console.log(`📍 CORS allowed origins: ${process.env.FRONTEND_URL || 'localhost'}`);
 });
 
-// ---------- 🔧 GRACEFUL SHUTDOWN for Mongoose 7+ (no callbacks) ----------
+// ---------- Graceful Shutdown (Mongoose 7+) ----------
 const gracefulShutdown = async (signal) => {
   console.log(`${signal} received. Closing server...`);
-  
-  // Stop accepting new connections
   server.close(async (err) => {
     if (err) {
       console.error('Error closing server:', err);
       process.exit(1);
     }
-    
     console.log('HTTP server closed.');
-    
     try {
-      // Close MongoDB connection (Mongoose 7+ returns a Promise, no callback)
       await mongoose.connection.close();
       console.log('MongoDB connection closed.');
       process.exit(0);
@@ -241,7 +212,6 @@ const gracefulShutdown = async (signal) => {
 process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
 process.on('SIGINT', () => gracefulShutdown('SIGINT'));
 
-// Uncaught exceptions & rejections – log and gracefully shut down
 process.on('uncaughtException', async (err) => {
   console.error('Uncaught Exception:', err);
   await gracefulShutdown('uncaughtException');
