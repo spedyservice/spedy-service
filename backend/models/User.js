@@ -26,8 +26,8 @@ const userSchema = new mongoose.Schema({
   },
   phone: {
     type: String,
-    sparse: true,        // ✅ index only documents that have a phone number
-    // ❌ removed unique: true – we'll enforce uniqueness manually in controller
+    // NOT unique – we will enforce uniqueness manually in registration controller
+    sparse: true,
     match: [/^[0-9]{10}$/, 'Please add a valid 10-digit phone number']
   },
   password: {
@@ -112,7 +112,7 @@ userSchema.methods.generatePasswordResetToken = function () {
     .createHash('sha256')
     .update(resetCode)
     .digest('hex');
-  this.passwordResetExpires = Date.now() + 60 * 60 * 1000; // 1 hour
+  this.passwordResetExpires = Date.now() + 60 * 60 * 1000;
   return resetCode;
 };
 
@@ -200,10 +200,15 @@ userSchema.virtual('maskedPhone').get(function () {
 });
 
 // ============ INDEXES ============
+// Only essential indexes – removed unique constraint on phone
 userSchema.index({ role: 1 });
 userSchema.index({ isActive: 1 });
 userSchema.index({ createdAt: -1 });
-// ❌ Removed duplicate index on googleId – already defined in field with unique:true, sparse:true
-// ✅ Keep only indexes that are not already covered by field definitions
+// Optional: partial unique index for phone (prevents duplicate non-null phones)
+userSchema.index(
+  { phone: 1 },
+  { unique: true, partialFilterExpression: { phone: { $type: 'string' } } }
+);
+userSchema.index({ googleId: 1 }, { unique: true, sparse: true });
 
 module.exports = mongoose.model('User', userSchema);
