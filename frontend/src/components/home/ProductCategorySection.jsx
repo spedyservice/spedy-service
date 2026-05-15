@@ -1,12 +1,15 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { FaSpinner } from 'react-icons/fa'
 import categoryService from '../../services/categoryService'
 
 const ProductCategorySection = () => {
   const [categories, setCategories] = useState([])
   const [loading, setLoading] = useState(true)
+  const scrollContainerRef = useRef(null)
+  const [isDragging, setIsDragging] = useState(false)
+  const [startX, setStartX] = useState(0)
+  const [scrollLeftStart, setScrollLeftStart] = useState(0)
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -24,12 +27,83 @@ const ProductCategorySection = () => {
     fetchCategories()
   }, [])
 
+  // Mouse wheel: use native smooth scrolling
+  useEffect(() => {
+    const container = scrollContainerRef.current
+    if (!container) return
+
+    const handleWheel = (e) => {
+      if (container.scrollWidth > container.clientWidth) {
+        e.preventDefault()
+        const delta = e.deltaY > 0 ? 100 : -100
+        const target = container.scrollLeft + delta
+        container.scrollTo({ left: target, behavior: 'smooth' })
+      }
+    }
+
+    container.addEventListener('wheel', handleWheel, { passive: false })
+    return () => container.removeEventListener('wheel', handleWheel)
+  }, [])
+
+  // Drag to scroll
+  const handleMouseDown = (e) => {
+    if (e.button !== 0) return
+    setIsDragging(true)
+    setStartX(e.pageX - scrollContainerRef.current.offsetLeft)
+    setScrollLeftStart(scrollContainerRef.current.scrollLeft)
+    scrollContainerRef.current.style.cursor = 'grabbing'
+    scrollContainerRef.current.style.userSelect = 'none'
+    e.preventDefault()
+  }
+
+  const handleMouseMove = useCallback((e) => {
+    if (!isDragging) return
+    const x = e.pageX - scrollContainerRef.current.offsetLeft
+    const walk = (x - startX) * 1.5
+    const newScrollLeft = scrollLeftStart - walk
+    scrollContainerRef.current.scrollLeft = newScrollLeft
+  }, [isDragging, startX, scrollLeftStart])
+
+  const handleMouseUp = useCallback(() => {
+    if (!isDragging) return
+    setIsDragging(false)
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.style.cursor = 'grab'
+      scrollContainerRef.current.style.userSelect = ''
+    }
+  }, [isDragging])
+
+  useEffect(() => {
+    if (isDragging) {
+      window.addEventListener('mousemove', handleMouseMove)
+      window.addEventListener('mouseup', handleMouseUp)
+    } else {
+      window.removeEventListener('mousemove', handleMouseMove)
+      window.removeEventListener('mouseup', handleMouseUp)
+    }
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove)
+      window.removeEventListener('mouseup', handleMouseUp)
+    }
+  }, [isDragging, handleMouseMove, handleMouseUp])
+
   if (loading || categories.length === 0) return null
 
   return (
-    <section className="bg-white pt-14 pb-2">   {/* top padding added, bottom border removed */}
+    <section className="bg-white pt-14 pb-2">
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
-        <div className="flex gap-4 sm:gap-5 overflow-x-auto snap-x snap-mandatory scrollbar-hide">
+        <div
+          ref={scrollContainerRef}
+          className="flex gap-4 sm:gap-5 overflow-x-auto snap-x snap-mandatory scrollbar-hide"
+          style={{
+            scrollbarWidth: 'none',
+            msOverflowStyle: 'none',
+            cursor: 'grab',
+            overscrollBehavior: 'contain',
+            scrollBehavior: 'smooth'
+          }}
+          onMouseDown={handleMouseDown}
+        >
           {categories.map((cat) => (
             <motion.div
               key={cat._id}
@@ -62,7 +136,15 @@ const ProductCategorySection = () => {
         </div>
       </div>
 
-      <style>{`.scrollbar-hide::-webkit-scrollbar{display:none}.scrollbar-hide{-ms-overflow-style:none;scrollbar-width:none;}`}</style>
+      <style>{`
+        .scrollbar-hide {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+        }
+        .scrollbar-hide::-webkit-scrollbar {
+          display: none;
+        }
+      `}</style>
     </section>
   )
 }

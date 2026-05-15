@@ -109,7 +109,7 @@ function App() {
   return (
     <div className="min-h-screen flex flex-col">
       {!shouldHideNavbarFooter && <Navbar />}
-      <main className={`flex-grow ${!shouldHideNavbarFooter ? 'pt-[70px] md:pt-[100px]' : ''}`}>
+      <main className={`flex-grow ${!shouldHideNavbarFooter ? 'pt-[60px] md:pt-[80px]' : ''}`}>
         <Suspense fallback={<PageLoader />}>
           <Routes>
             <Route path="/" element={<HomePage />} />
