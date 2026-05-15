@@ -1,145 +1,118 @@
 import api from './api';
 
 const adminService = {
-  // Existing methods
+  // Dashboard
   getDashboardOverview: async () => {
-    const response = await api.get('/admin/dashboard');
-    return response.data;
+    return await api.get('/admin/dashboard');
   },
 
   getAllUsers: async (params = {}) => {
     const queryParams = new URLSearchParams(params).toString();
-    const response = await api.get(`/admin/users?${queryParams}`);
-    return response.data;
+    return await api.get(`/admin/users?${queryParams}`);
   },
 
   getUserById: async (id) => {
-    const response = await api.get(`/admin/users/${id}`);
-    return response.data;
+    return await api.get(`/admin/users/${id}`);
   },
 
   updateUser: async (id, userData) => {
-    const response = await api.put(`/admin/users/${id}`, userData);
-    return response.data;
+    return await api.put(`/admin/users/${id}`, userData);
   },
 
   deleteUser: async (id) => {
-    const response = await api.delete(`/admin/users/${id}`);
-    return response.data;
+    return await api.delete(`/admin/users/${id}`);
   },
 
   createAdmin: async (adminData) => {
-    const response = await api.post('/admin/create-admin', adminData);
-    return response.data;
+    return await api.post('/admin/create-admin', adminData);
   },
 
   getSystemStats: async () => {
-    const response = await api.get('/admin/stats');
-    return response.data;
+    return await api.get('/admin/stats');
   },
 
   getBookingAnalytics: async (period = 'month') => {
-    const response = await api.get(`/admin/analytics/bookings?period=${period}`);
-    return response.data;
+    return await api.get(`/admin/analytics/bookings?period=${period}`);
   },
 
   getRevenueReport: async (year) => {
-    const response = await api.get(`/admin/reports/revenue?year=${year}`);
-    return response.data;
+    return await api.get(`/admin/reports/revenue?year=${year}`);
   },
 
   // Product Category Management
   getProductCategories: async (params = {}) => {
     const queryParams = new URLSearchParams(params).toString();
-    const response = await api.get(`/categories?${queryParams}`);
-    return response.data;
+    return await api.get(`/categories?${queryParams}`);
   },
 
   getProductCategoryById: async (id) => {
-    const response = await api.get(`/categories/${id}`);
-    return response.data;
+    return await api.get(`/categories/${id}`);
   },
 
   createProductCategory: async (categoryData) => {
-    const response = await api.post('/categories', categoryData);
-    return response.data;
+    return await api.post('/categories', categoryData);
   },
 
   updateProductCategory: async (id, categoryData) => {
-    const response = await api.put(`/categories/${id}`, categoryData);
-    return response.data;
+    return await api.put(`/categories/${id}`, categoryData);
   },
 
   deleteProductCategory: async (id) => {
-    const response = await api.delete(`/categories/${id}`);
-    return response.data;
+    return await api.delete(`/categories/${id}`);
   },
 
   // Product Management
   getProducts: async (params = {}) => {
     const queryParams = new URLSearchParams(params).toString();
-    const response = await api.get(`/products?${queryParams}`);
-    return response.data;
+    return await api.get(`/products?${queryParams}`);
   },
 
   getProductById: async (id) => {
-    const response = await api.get(`/products/${id}`);
-    return response.data;
+    return await api.get(`/products/${id}`);
   },
 
   createProduct: async (productData) => {
-    const response = await api.post('/products', productData);
-    return response.data;
+    return await api.post('/products', productData);
   },
 
   updateProduct: async (id, productData) => {
-    const response = await api.put(`/products/${id}`, productData);
-    return response.data;
+    return await api.put(`/products/${id}`, productData);
   },
 
   deleteProduct: async (id) => {
-    const response = await api.delete(`/products/${id}`);
-    return response.data;
+    return await api.delete(`/products/${id}`);
   },
 
   // Order Management
   getAllOrders: async (params = {}) => {
     const queryParams = new URLSearchParams(params).toString();
-    const response = await api.get(`/orders?${queryParams}`);
-    return response.data;
+    return await api.get(`/orders?${queryParams}`);
   },
 
   getOrderById: async (id) => {
-    const response = await api.get(`/orders/${id}`);
-    return response.data;
+    return await api.get(`/orders/${id}`);
   },
 
   updateOrderStatus: async (id, status) => {
-    const response = await api.put(`/orders/${id}/status`, { status });
-    return response.data;
+    return await api.put(`/orders/${id}/status`, { status });
   },
 
   deleteOrder: async (id) => {
-    const response = await api.delete(`/orders/${id}`);
-    return response.data;
+    return await api.delete(`/orders/${id}`);
   },
 
-  // ── NEW: Video Management ──
+  // Video Management
   getAllVideos: async () => {
-    const response = await api.get('/videos/admin');
-    return response.data;
+    return await api.get('/videos/admin');
   },
   createVideo: async (videoData) => {
-    const response = await api.post('/videos', videoData);
-    return response.data;
+    return await api.post('/videos', videoData);
   },
   updateVideo: async (id, videoData) => {
-    const response = await api.put(`/videos/${id}`, videoData);
-    return response.data;
+    return await api.put(`/videos/${id}`, videoData);
   },
   deleteVideo: async (id) => {
-    const response = await api.delete(`/videos/${id}`);
-    return response.data;
+    return await api.delete(`/videos/${id}`);
   },
 };
 

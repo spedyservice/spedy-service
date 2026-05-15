@@ -2,49 +2,40 @@ import api from './api'
 
 const bookingService = {
   createBooking: async (bookingData) => {
-    const response = await api.post('/bookings', bookingData)
-    return response.data
+    return await api.post('/bookings', bookingData)
   },
 
   getAllBookings: async (params = {}) => {
     const queryParams = new URLSearchParams(params).toString()
-    const response = await api.get(`/bookings?${queryParams}`)
-    return response.data
+    return await api.get(`/bookings?${queryParams}`)
   },
 
   getMyBookings: async () => {
-    const response = await api.get('/bookings/mybookings')
-    return response.data
+    return await api.get('/bookings/mybookings')
   },
 
   getBookingById: async (id) => {
-    const response = await api.get(`/bookings/${id}`)
-    return response.data
+    return await api.get(`/bookings/${id}`)
   },
 
   updateBookingStatus: async (id, statusData) => {
-    const response = await api.put(`/bookings/${id}/status`, statusData)
-    return response.data
+    return await api.put(`/bookings/${id}/status`, statusData)
   },
 
   cancelBooking: async (id, cancellationReason) => {
-    const response = await api.post(`/bookings/${id}/cancel`, { cancellationReason })
-    return response.data
+    return await api.post(`/bookings/${id}/cancel`, { cancellationReason })
   },
 
   addReview: async (id, rating, review) => {
-    const response = await api.post(`/bookings/${id}/review`, { rating, review })
-    return response.data
+    return await api.post(`/bookings/${id}/review`, { rating, review })
   },
 
   deleteBooking: async (id) => {
-    const response = await api.delete(`/bookings/${id}`)
-    return response.data
+    return await api.delete(`/bookings/${id}`)
   },
 
   getBookingStats: async () => {
-    const response = await api.get('/bookings/stats/overview')
-    return response.data
+    return await api.get('/bookings/stats/overview')
   },
 }
 

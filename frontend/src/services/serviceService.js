@@ -3,38 +3,25 @@ import api from './api'
 const serviceService = {
   getAllServices: async (params = {}) => {
     const queryParams = new URLSearchParams(params).toString()
-    const response = await api.get(`/services?${queryParams}`)
-    return response.data
+    return await api.get(`/services?${queryParams}`)
   },
-
   getServiceById: async (id) => {
-    const response = await api.get(`/services/${id}`)
-    return response.data
+    return await api.get(`/services/${id}`)
   },
-
   getPopularServices: async () => {
-    const response = await api.get('/services/popular')
-    return response.data
+    return await api.get('/services/popular')
   },
-
   createService: async (serviceData) => {
-    const response = await api.post('/services', serviceData)
-    return response.data
+    return await api.post('/services', serviceData)
   },
-
   updateService: async (id, serviceData) => {
-    const response = await api.put(`/services/${id}`, serviceData)
-    return response.data
+    return await api.put(`/services/${id}`, serviceData)
   },
-
   toggleServiceStatus: async (id) => {
-    const response = await api.patch(`/services/${id}/toggle-status`)
-    return response.data
+    return await api.patch(`/services/${id}/toggle-status`)
   },
-
   deleteService: async (id) => {
-    const response = await api.delete(`/services/${id}`)
-    return response.data
+    return await api.delete(`/services/${id}`)
   },
 }
 

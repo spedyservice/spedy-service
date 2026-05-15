@@ -2,11 +2,21 @@
 
 import axios from 'axios';
 
-// In production, use VITE_API_URL (your Render backend)
-// In development, use '/api' which is proxied by Vite
-const API_BASE_URL = import.meta.env.PROD
-  ? import.meta.env.VITE_API_URL || '/api'
-  : '/api';
+// Helper to get API base URL with /api suffix
+const getApiBaseUrl = () => {
+  if (import.meta.env.PROD) {
+    const envUrl = import.meta.env.VITE_API_URL;
+    if (envUrl) {
+      // Ensure the URL ends with /api
+      const normalizedUrl = envUrl.endsWith('/api') ? envUrl : `${envUrl.replace(/\/$/, '')}/api`;
+      return normalizedUrl;
+    }
+    return '/api'; // fallback
+  }
+  return '/api'; // development proxy
+};
+
+const API_BASE_URL = getApiBaseUrl();
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -24,12 +34,10 @@ api.interceptors.request.use(
       config.headers.Authorization = `Bearer ${token}`;
     }
     
-    // If sending FormData, remove Content-Type header so browser sets it with boundary
     if (config.data instanceof FormData) {
       delete config.headers['Content-Type'];
     }
     
-    // Log in development only
     if (import.meta.env.DEV) {
       console.log(`📤 API Request: ${config.method?.toUpperCase()} ${config.baseURL}${config.url}`);
     }
@@ -42,20 +50,15 @@ api.interceptors.request.use(
   }
 );
 
-// Response interceptor to handle errors and unwrap data
+// Response interceptor
 api.interceptors.response.use(
-  (response) => {
-    // Return response.data directly for cleaner usage in services
-    // Your backend already wraps responses with { success, data, message }
-    return response.data;
-  },
+  (response) => response.data,
   (error) => {
     if (import.meta.env.DEV) {
       console.error('📥 API Response Error:', error.response?.config?.url, error.response?.data);
     }
     
     if (error.response?.status === 401) {
-      // Don't auto-redirect for public routes – let components handle it
       const isPublicPath = error.response?.config?.url?.includes('/auth/');
       if (!isPublicPath) {
         localStorage.removeItem('token');
@@ -64,7 +67,6 @@ api.interceptors.response.use(
       }
     }
     
-    // Return a consistent error object
     return Promise.reject({
       success: false,
       message: error.response?.data?.message || error.message || 'Network error',

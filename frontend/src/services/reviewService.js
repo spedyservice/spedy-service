@@ -2,13 +2,11 @@ import api from './api'
 
 const reviewService = {
   getProductReviews: async (productId) => {
-    const response = await api.get(`/reviews/product/${productId}`)
-    return response.data
+    return await api.get(`/reviews/product/${productId}`)
   },
 
   createReview: async (data) => {
-    const response = await api.post('/reviews', data)
-    return response.data
+    return await api.post('/reviews', data)
   },
 }
 

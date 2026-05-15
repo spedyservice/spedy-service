@@ -2,18 +2,15 @@ import api from './api'
 
 const orderService = {
   createOrder: async (orderData) => {
-    const response = await api.post('/orders', orderData)
-    return response.data
+    return await api.post('/orders', orderData)
   },
 
   getMyOrders: async () => {
-    const response = await api.get('/orders/my')
-    return response.data
+    return await api.get('/orders/my')
   },
 
   getOrderById: async (id) => {
-    const response = await api.get(`/orders/${id}`)
-    return response.data
+    return await api.get(`/orders/${id}`)
   },
 }
 
