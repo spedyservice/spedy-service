@@ -81,6 +81,7 @@ const Navbar = () => {
   const [searchQuery, setSearchQuery] = useState('')
   const [scrollY, setScrollY] = useState(0)
   const [msgIndex, setMsgIndex] = useState(0)
+  const [showMobileSearch, setShowMobileSearch] = useState(false) // NEW: toggle mobile search input
 
   // ---------- Cart count ----------
   const fetchCartCount = useCallback(async () => {
@@ -116,7 +117,7 @@ const Navbar = () => {
     return () => document.removeEventListener('mousedown', cb)
   }, [])
 
-  useEffect(() => { setIsDropdownOpen(false); setIsOpen(false); setIsMobileDropdownOpen(false) }, [location.pathname])
+  useEffect(() => { setIsDropdownOpen(false); setIsOpen(false); setIsMobileDropdownOpen(false); setShowMobileSearch(false) }, [location.pathname])
 
   // ---------- Scroll detection for glass effect ----------
   useEffect(() => {
@@ -131,10 +132,6 @@ const Navbar = () => {
     return () => clearInterval(id)
   }, [])
 
-  // -------- Hide MOBILE search bar on order, booking, shop, and contact pages --------
-  const hideMobileSearchPaths = ['/cart', '/checkout', '/my-orders', '/order/', '/book-now', '/my-bookings', '/booking/', '/shop', '/contact']
-  const hideMobileSearch = hideMobileSearchPaths.some(prefix => location.pathname.startsWith(prefix))
-
   const handleLogout = () => {
     logout()
     navigate('/')
@@ -148,6 +145,7 @@ const Navbar = () => {
     if (searchQuery.trim()) {
       navigate(`/shop?search=${encodeURIComponent(searchQuery.trim())}`)
       setSearchQuery('')
+      setShowMobileSearch(false)
     }
   }
 
@@ -195,12 +193,19 @@ const Navbar = () => {
 
           {/* ═══════ Mobile layout ═══════ */}
           <div className="flex lg:hidden items-center justify-between py-3">
-            <div className="w-10 flex items-center">
+            <div className="flex items-center gap-2">
               <button
                 onClick={() => setIsOpen(!isOpen)}
                 className="p-1.5 text-gray-700 hover:bg-gray-100 rounded-lg"
               >
                 {isOpen ? <FaTimes size={20} /> : <FaBars size={20} />}
+              </button>
+              {/* NEW: Search icon button toggles mobile search input */}
+              <button
+                onClick={() => setShowMobileSearch(!showMobileSearch)}
+                className="p-1.5 text-gray-700 hover:bg-gray-100 rounded-lg"
+              >
+                <FaSearch size={18} />
               </button>
             </div>
 
@@ -212,7 +217,7 @@ const Navbar = () => {
               </Link>
             </div>
 
-            <div className="w-10 flex items-center justify-end gap-2">
+            <div className="flex items-center justify-end gap-2">
               {isAuthenticated ? (
                 <div className="relative" ref={mobileDropdownRef}>
                   <button
@@ -366,21 +371,30 @@ const Navbar = () => {
           </div>
         </div>
 
-        {/* ═══════ Mobile search bar – hidden on order/booking/shop/contact pages ═══════ */}
-        {!hideMobileSearch && (
-          <div className="lg:hidden border-t border-gray-200 px-4 py-2">
-            <form onSubmit={handleSearch} className="flex items-center bg-gray-100 rounded-full px-3 py-2">
-              <FaSearch className="text-gray-400 text-xs mr-2" />
-              <input
-                type="text"
-                placeholder="Search products…"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="bg-transparent outline-none text-sm w-full text-gray-700 placeholder-gray-400"
-              />
-            </form>
-          </div>
-        )}
+        {/* ═══════ Mobile search input (toggled by search icon) ═══════ */}
+        <AnimatePresence>
+          {showMobileSearch && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.2 }}
+              className="lg:hidden border-t border-gray-200 px-4 py-2"
+            >
+              <form onSubmit={handleSearch} className="flex items-center bg-gray-100 rounded-full px-3 py-2">
+                <FaSearch className="text-gray-400 text-xs mr-2" />
+                <input
+                  type="text"
+                  placeholder="Search products…"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  autoFocus
+                  className="bg-transparent outline-none text-sm w-full text-gray-700 placeholder-gray-400"
+                />
+              </form>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
       {/* ── MOBILE MENU ── */}
@@ -392,7 +406,7 @@ const Navbar = () => {
             exit={{ opacity: 0, x: '100%' }}
             transition={{ type: 'tween', duration: 0.3 }}
             className="fixed inset-0 z-40 bg-white overflow-y-auto lg:hidden"
-            style={{ top: hideMobileSearch ? '72px' : '104px' }}
+            style={{ top: showMobileSearch ? 'calc(7rem + 56px)' : 'calc(7rem + 48px)' }} // adjust based on search visibility
           >
             <div className="px-5 py-6">
               <div className="flex flex-col gap-1.5 mb-6">
