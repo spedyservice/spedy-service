@@ -1,82 +1,72 @@
-import api from './api'
+import api from './api';
 
 const authService = {
   register: async (userData) => {
-    const response = await api.post('/auth/register', userData)
-    // response = { success, data: { user, token } }
+    const response = await api.post('/auth/register', userData);
     if (response.data?.token) {
-      localStorage.setItem('token', response.data.token)
-      localStorage.setItem('user', JSON.stringify(response.data))
+      localStorage.setItem('token', response.data.token);
+      localStorage.set('user', JSON.stringify(response.data));
     }
-    return response.data
+    return response;
   },
 
   login: async (email, password) => {
-    const response = await api.post('/auth/login', { email, password })
+    const response = await api.post('/auth/login', { email, password });
     if (response.data?.token) {
-      localStorage.setItem('token', response.data.token)
-      localStorage.setItem('user', JSON.stringify(response.data))
+      localStorage.setItem('token', response.data.token);
+      localStorage.setItem('user', JSON.stringify(response.data));
     }
-    return response.data
+    return response;
   },
 
   googleLogin: async (credential) => {
-    const response = await api.post('/auth/google', { credential })
+    const response = await api.post('/auth/google', { credential });
     if (response.data?.token) {
-      localStorage.setItem('token', response.data.token)
-      localStorage.setItem('user', JSON.stringify(response.data))
+      localStorage.setItem('token', response.data.token);
+      localStorage.setItem('user', JSON.stringify(response.data));
     }
-    return response.data
+    return response;
   },
 
   logout: () => {
-    localStorage.removeItem('token')
-    localStorage.removeItem('user')
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
   },
 
   getCurrentUser: () => {
-    const userStr = localStorage.getItem('user')
-    if (userStr) {
-      return JSON.parse(userStr)
-    }
-    return null
+    const userStr = localStorage.getItem('user');
+    if (userStr) return JSON.parse(userStr);
+    return null;
   },
 
   getProfile: async () => {
-    const response = await api.get('/auth/profile')
-    // response.data is the user object (no wrapper)
-    return response.data
+    return await api.get('/auth/profile');
   },
 
   updateProfile: async (userData) => {
-    const response = await api.put('/auth/profile', userData)
-    return response.data
+    return await api.put('/auth/profile', userData);
   },
 
   changePassword: async (passwordData) => {
-    const response = await api.put('/auth/change-password', passwordData)
-    return response.data
+    return await api.put('/auth/change-password', passwordData);
   },
 
   forgotPassword: async (email) => {
-    const response = await api.post('/auth/forgot-password', { email })
-    return response.data
+    return await api.post('/auth/forgot-password', { email });
   },
 
   resetPassword: async (code, password) => {
-    const response = await api.post('/auth/reset-password', { code, password })
-    return response.data
+    return await api.post('/auth/reset-password', { code, password });
   },
 
   isAdmin: () => {
-    const user = authService.getCurrentUser()
-    return user?.role === 'admin'
+    const user = authService.getCurrentUser();
+    return user?.role === 'admin';
   },
 
   isAuthenticated: () => {
-    const token = localStorage.getItem('token')
-    return !!token
+    return !!localStorage.getItem('token');
   },
-}
+};
 
-export default authService
+export default authService;
