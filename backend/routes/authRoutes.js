@@ -1,9 +1,10 @@
 const express = require('express');
+const passport = require('passport');
 const router = express.Router();
 const {
   registerUser,
   loginUser,
-  googleAuth,           // ← new
+  googleAuth,           // keep existing for potential fallback
   getUserProfile,
   updateUserProfile,
   changePassword,
@@ -18,9 +19,23 @@ const { registerValidation, loginValidation } = require('../middleware/validatio
 // Public routes
 router.post('/register', registerValidation, registerUser);
 router.post('/login', loginValidation, loginUser);
-router.post('/google', googleAuth);               // ← new
+router.post('/google', googleAuth);  // kept as backup
+
+// Google OAuth redirect and callback (NEW)
+router.get('/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
+
+router.get(
+  '/google/callback',
+  passport.authenticate('google', { session: true, failureRedirect: `${process.env.FRONTEND_URL}/login` }),
+  (req, res) => {
+    // Successful authentication – redirect to frontend with token
+    const { token } = req.user;
+    res.redirect(`${process.env.FRONTEND_URL}/auth-callback?token=${token}`);
+  }
+);
+
 router.post('/forgot-password', forgotPassword);
-router.post('/reset-password', resetPassword);     // ← no more URL parameter
+router.post('/reset-password', resetPassword);
 router.get('/verify-email/:token', verifyEmail);
 router.post('/resend-verification', resendVerificationEmail);
 

@@ -1,34 +1,22 @@
-import React from 'react'
-import { GoogleLogin } from '@react-oauth/google'
-import { useNavigate } from 'react-router-dom'
-import { useAuth } from '../../context/AuthContext'
-import toast from 'react-hot-toast'
+import React from 'react';
+import { FcGoogle } from 'react-icons/fc';
 
-const GoogleLoginButton = () => {
-  const { googleLogin } = useAuth()
-  const navigate = useNavigate()
+const GoogleLoginButton = ({ text = 'Continue with Google' }) => {
+  const handleGoogleLogin = () => {
+    const backendUrl = import.meta.env.VITE_API_URL || 'https://spedy-service-backend.onrender.com/api';
+    const googleAuthUrl = backendUrl.replace('/api', '') + '/api/auth/google';
+    window.location.href = googleAuthUrl;
+  };
 
   return (
-    <GoogleLogin
-      onSuccess={async (credentialResponse) => {
-        try {
-          await googleLogin(credentialResponse.credential)
-          navigate('/')
-        } catch (error) {
-          console.error('Google login error:', error)
-          toast.error('Google sign-in failed')
-        }
-      }}
-      onError={() => toast.error('Google sign-in was cancelled')}
-      ux_mode="popup"
-      theme="outline"
-      size="large"
-      text="continue_with"
-      shape="rectangular"
-      logo_alignment="center"
-      useOneTap={false}
-    />
-  )
-}
+    <button
+      onClick={handleGoogleLogin}
+      className="w-full flex items-center justify-center gap-3 px-4 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+    >
+      <FcGoogle size={20} />
+      <span className="text-sm font-medium text-gray-700">{text}</span>
+    </button>
+  );
+};
 
-export default GoogleLoginButton
+export default GoogleLoginButton;

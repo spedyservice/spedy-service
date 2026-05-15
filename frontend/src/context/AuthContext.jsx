@@ -47,7 +47,7 @@ export const AuthProvider = ({ children }) => {
       const data = await authService.googleLogin(credential)
       setUser(data)
       setIsAdmin(data.role === 'admin')
-      toast.success('Welcome back')   // ← changed message
+      toast.success('Welcome back')
       return data
     } catch (error) {
       toast.error(error.response?.data?.message || 'Google login failed')
@@ -91,6 +91,8 @@ export const AuthProvider = ({ children }) => {
     user,
     loading,
     isAdmin,
+    setUser,      // ✅ Exposed for AuthCallbackPage
+    setIsAdmin,   // ✅ Exposed for AuthCallbackPage
     login,
     googleLogin,
     register,

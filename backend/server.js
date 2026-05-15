@@ -1,15 +1,22 @@
+// FILE PATH: backend/server.js
+
 const express = require('express');
 const mongoose = require('mongoose');
+const dotenv = require('dotenv');
 const cors = require('cors');
+const path = require('path');
+const fs = require('fs');
+const compression = require('compression');
 const helmet = require('helmet');
 const morgan = require('morgan');
-const compression = require('compression');
 const rateLimit = require('express-rate-limit');
-const dotenv = require('dotenv');
-const path = require('path');
+const session = require('express-session');
+const passport = require('passport');
 
+// Load env vars
 dotenv.config();
 
+// Import routes
 const authRoutes = require('./routes/authRoutes');
 const bookingRoutes = require('./routes/bookingRoutes');
 const serviceRoutes = require('./routes/serviceRoutes');
@@ -24,80 +31,87 @@ const reviewRoutes = require('./routes/reviewRoutes');
 const bannerRoutes = require('./routes/bannerRoutes');
 const videoRoutes = require('./routes/videoRoutes');
 
+// Import DB connection
 const connectDB = require('./config/db');
+
+// Import Google OAuth strategy
+const { initGoogleStrategy } = require('./services/googleAuthService');
 
 const app = express();
 
-// ---------- Security & Parsing ----------
-// Helmet with all policies disabled that could block Google OAuth
+// ========== SECURITY & MIDDLEWARE ==========
+
+// Compression for faster responses
+app.use(compression());
+
+// Security headers (allow Google OAuth)
 app.use(helmet({
   contentSecurityPolicy: false,
   crossOriginEmbedderPolicy: false,
   crossOriginOpenerPolicy: false,
-  crossOriginResourcePolicy: false,
+  crossOriginResourcePolicy: { policy: "cross-origin" },
   xFrameOptions: false,
 }));
 
-// 🔥 FORCEFULLY REMOVE ALL BLOCKING HEADERS
-app.use((req, res, next) => {
-  res.removeHeader('X-Frame-Options');
-  res.removeHeader('Cross-Origin-Opener-Policy');
-  res.removeHeader('Cross-Origin-Embedder-Policy');
-  res.removeHeader('Cross-Origin-Resource-Policy');
-  res.setHeader('Cross-Origin-Opener-Policy', 'unsafe-none');
-  res.setHeader('Cross-Origin-Embedder-Policy', 'unsafe-none');
-  next();
-});
-
-// CORS – production & development
-const allowedOrigins = [
-  'http://localhost:5000',
-  'http://127.0.0.1:5000',
-  /^http:\/\/192\.168\.\d+\.\d+:5000$/,
-  /^http:\/\/10\.\d+\.\d+\.\d+:5000$/,
-  process.env.FRONTEND_URL
-].filter(Boolean);
-
-app.use(cors({
-  origin: function (origin, callback) {
-    if (!origin) return callback(null, true);
-    if (allowedOrigins.some(pattern =>
-      typeof pattern === 'string' ? pattern === origin : pattern.test(origin)
-    )) {
-      callback(null, true);
-    } else {
-      console.warn(`CORS blocked: ${origin}`);
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
-  credentials: true,
-  optionsSuccessStatus: 200
+// Session middleware (required for Passport)
+app.use(session({
+  secret: process.env.JWT_SECRET || 'session_secret',
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    secure: process.env.NODE_ENV === 'production',
+    maxAge: 24 * 60 * 60 * 1000 // 1 day
+  }
 }));
 
+// Initialize Passport
+app.use(passport.initialize());
+app.use(passport.session());
+initGoogleStrategy();
+
+// CORS Configuration
+const allowedOrigins = process.env.NODE_ENV === 'production' 
+  ? [
+      process.env.FRONTEND_URL,
+      'https://spedy-service.vercel.app',
+    ].filter(Boolean)
+  : true;
+
+app.use(cors({
+  origin: allowedOrigins,
+  credentials: true,
+}));
+
+// Rate limiting
 const limiter = rateLimit({
   windowMs: 5 * 60 * 1000,
-  max: process.env.NODE_ENV === 'production' ? 5000 : 10000,
-  message: 'Too many requests, please try again later',
-  standardHeaders: true,
-  legacyHeaders: false,
+  max: process.env.NODE_ENV === 'production' ? 1000 : 10000,
+  message: 'Too many requests, please try again later.',
 });
 app.use('/api', limiter);
 
+// Body parsers
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
-app.use(compression());
 
+// Logging
 if (process.env.NODE_ENV === 'development') {
   app.use(morgan('dev'));
 } else {
   app.use(morgan('combined'));
 }
 
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+// Create uploads folder if it doesn't exist (for local dev only)
+const uploadsDir = path.join(__dirname, 'uploads');
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+}
+app.use('/uploads', express.static(uploadsDir));
 
+// ========== DATABASE CONNECTION ==========
 connectDB();
 
-// ---------- API Routes (no caching) ----------
+// ========== API ROUTES ==========
 app.use('/api/auth', authRoutes);
 app.use('/api/bookings', bookingRoutes);
 app.use('/api/services', serviceRoutes);
@@ -112,88 +126,75 @@ app.use('/api/reviews', reviewRoutes);
 app.use('/api/banners', bannerRoutes);
 app.use('/api/videos', videoRoutes);
 
-// ---------- Health Check ----------
+// ========== HEALTH CHECK ==========
 app.get('/health', (req, res) => {
   res.status(200).json({
     success: true,
     status: 'OK',
-    message: 'Server is running',
-    timestamp: new Date().toISOString(),
     uptime: process.uptime(),
+    mongodb: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected',
     environment: process.env.NODE_ENV,
-    mongodb: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected'
+    timestamp: new Date().toISOString()
   });
 });
 
-// ---------- Root Route ----------
+// ========== ROOT ROUTE ==========
 app.get('/', (req, res) => {
-  res.status(200).json({
+  res.json({
     success: true,
-    message: 'Welcome to Spedy Service API',
+    message: 'Spedy Service API is running',
     version: '1.0.0',
-    status: 'active',
-    environment: process.env.NODE_ENV
+    environment: process.env.NODE_ENV || 'development'
   });
 });
 
-// ---------- 404 Handler ----------
+// ========== 404 HANDLER ==========
 app.use((req, res) => {
   res.status(404).json({
     success: false,
-    message: `Route ${req.originalUrl} not found`,
-    error: 'NOT_FOUND'
+    message: `Route ${req.originalUrl} not found`
   });
 });
 
-// ---------- Global Error Handler ----------
+// ========== GLOBAL ERROR HANDLER ==========
 app.use((err, req, res, next) => {
   console.error('Error:', err.message);
   res.status(err.statusCode || 500).json({
     success: false,
     message: err.message || 'Internal Server Error',
-    error: process.env.NODE_ENV === 'development' ? err.stack : undefined,
-    timestamp: new Date().toISOString()
+    ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
   });
 });
 
-// ---------- Start Server ----------
+// ========== START SERVER ==========
 const PORT = process.env.PORT || 5001;
-const server = app.listen(PORT, () => {
+const server = app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 Server running on port ${PORT}`);
-  console.log(`📍 CORS allowed origins: ${process.env.FRONTEND_URL || 'localhost'}`);
+  console.log(`📍 Environment: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`📍 Allowed origins: ${allowedOrigins === true ? 'all (development)' : allowedOrigins.join(', ')}`);
 });
 
-// ---------- Graceful Shutdown (Mongoose 7+) ----------
+// ========== GRACEFUL SHUTDOWN ==========
 const gracefulShutdown = async (signal) => {
   console.log(`${signal} received. Closing server...`);
   server.close(async (err) => {
-    if (err) {
-      console.error('Error closing server:', err);
-      process.exit(1);
-    }
-    console.log('HTTP server closed.');
+    if (err) console.error(err);
     try {
       await mongoose.connection.close();
       console.log('MongoDB connection closed.');
       process.exit(0);
     } catch (dbErr) {
-      console.error('Error closing MongoDB connection:', dbErr);
+      console.error('Error closing MongoDB:', dbErr);
       process.exit(1);
     }
   });
 };
-
 process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
 process.on('SIGINT', () => gracefulShutdown('SIGINT'));
 
-process.on('uncaughtException', async (err) => {
-  console.error('Uncaught Exception:', err);
-  await gracefulShutdown('uncaughtException');
-});
-
-process.on('unhandledRejection', async (err) => {
+process.on('unhandledRejection', (err) => {
   console.error('Unhandled Rejection:', err);
-  await gracefulShutdown('unhandledRejection');
+  gracefulShutdown('unhandledRejection');
 });
 
 module.exports = app;
