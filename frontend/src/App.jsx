@@ -6,7 +6,7 @@ import AdminLayout from './components/common/AdminLayout';
 import ProtectedRoute from './components/common/ProtectedRoute';
 import AdminRoute from './components/common/AdminRoute';
 
-// Lazy load page components for code splitting
+// Lazy load page components for code splitting (except MyBookingsPage)
 const HomePage = lazy(() => import('./pages/HomePage'));
 const ServicesPage = lazy(() => import('./pages/ServicesPage'));
 const BookNowPage = lazy(() => import('./pages/BookNowPage'));
@@ -15,8 +15,9 @@ const LoginPage = lazy(() => import('./pages/LoginPage'));
 const RegisterPage = lazy(() => import('./pages/RegisterPage'));
 const ForgotPasswordPage = lazy(() => import('./pages/ForgotPasswordPage'));
 const ResetPasswordPage = lazy(() => import('./pages/ResetPasswordPage'));
-const AuthCallbackPage = lazy(() => import('./pages/AuthCallbackPage')); // ✅ NEW
-const MyBookingsPage = lazy(() => import('./pages/MyBookingsPage'));
+const AuthCallbackPage = lazy(() => import('./pages/AuthCallbackPage'));
+// MyBookingsPage is imported normally to avoid dynamic chunk missing
+import MyBookingsPage from './pages/MyBookingsPage';
 const BookingDetailPage = lazy(() => import('./pages/BookingDetailPage'));
 const ProfilePage = lazy(() => import('./pages/ProfilePage'));
 const ShopPage = lazy(() => import('./pages/ShopPage'));
@@ -120,7 +121,7 @@ function App() {
             <Route path="/register" element={<RegisterPage />} />
             <Route path="/forgot-password" element={<ForgotPasswordPage />} />
             <Route path="/reset-password" element={<ResetPasswordPage />} />
-            <Route path="/auth-callback" element={<AuthCallbackPage />} /> {/* ✅ NEW */}
+            <Route path="/auth-callback" element={<AuthCallbackPage />} />
 
             <Route path="/my-bookings" element={<ProtectedRoute><MyBookingsPage /></ProtectedRoute>} />
             <Route path="/bookings/:id" element={<ProtectedRoute><BookingDetailPage /></ProtectedRoute>} />

@@ -39,7 +39,6 @@ const CartPage = () => {
     } catch (error) { toast.error('Failed to remove item') }
   }
 
-  // Lightweight placeholder – never blocked
   const PLACEHOLDER = 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%22 height=%22100%22%3E%3Crect fill=%22%23f3f4f6%22 width=%22100%22 height=%22100%22/%3E%3Ctext fill=%22%236b7280%22 font-family=%22Arial%22 font-size=%2210%22 dy=%22.35em%22 x=%2210%22 y=%2250%22%3ENo Image%3C/text%3E%3C/svg%3E'
 
   const getImageSrc = (product) => {
@@ -51,7 +50,7 @@ const CartPage = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center pt-20">
+      <div className="min-h-screen flex items-center justify-center pt-[65px] md:pt-[80px]">
         <FaSpinner className="w-10 h-10 text-blue-600 animate-spin" />
       </div>
     )
@@ -63,9 +62,8 @@ const CartPage = () => {
   const total = subtotal + shipping
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Increased top padding so header sits well below fixed navbar */}
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 pt-8 md:pt-10 pb-4 md:pb-8">
+    <div className="min-h-screen bg-gray-50 pt-[65px] md:pt-[80px]">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 pb-12">
         <div className="flex items-center justify-between mb-5">
           <h1 className="text-xl md:text-2xl font-bold text-gray-900">Shopping Cart</h1>
           <Link to="/shop" className="text-blue-600 hover:text-blue-700 font-medium text-sm flex items-center gap-1">
@@ -133,7 +131,7 @@ const CartPage = () => {
             </div>
 
             {/* Order Summary – sticky top adjusted for navbar height */}
-            <div className="bg-white rounded-xl shadow-sm p-4 h-fit sticky top-[120px]">
+            <div className="bg-white rounded-xl shadow-sm p-4 h-fit sticky top-[calc(65px+1rem)] md:top-[calc(80px+1rem)]">
               <h2 className="text-base font-bold text-gray-900 mb-3">Order Summary</h2>
               <div className="space-y-2 text-xs sm:text-sm">
                 <div className="flex justify-between"><span className="text-gray-600">Subtotal</span><span className="font-semibold">₹{subtotal}</span></div>
