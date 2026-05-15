@@ -76,11 +76,16 @@ const installableProducts = [
   'Microwave Oven'
 ]
 
-const loadSavedData = () => {
+// Helper to load saved data only if it belongs to current user
+const loadSavedData = (currentUserEmail) => {
   const saved = localStorage.getItem('bookingFormData')
   if (saved) {
     try {
       const parsed = JSON.parse(saved)
+      // If the saved data has a userEmail and it doesn't match current user, ignore it
+      if (parsed.userEmail && parsed.userEmail !== currentUserEmail) {
+        return null
+      }
       return {
         formData: {
           productCategory: parsed.productCategory || '',
@@ -108,7 +113,8 @@ const BookNowPage = () => {
   const { user, isAuthenticated, loading: authLoading } = useAuth()
   const navigate = useNavigate()
 
-  const saved = loadSavedData()
+  // Load saved data only if it matches current user email
+  const saved = user?.email ? loadSavedData(user.email) : null
 
   const [brands, setBrands] = useState([])
   const [categories, setCategories] = useState([])
@@ -133,16 +139,43 @@ const BookNowPage = () => {
   })
   const [currentStep, setCurrentStep] = useState(saved?.currentStep || 1)
 
+  // Redirect if not authenticated
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
       navigate('/login?redirect=/book-now', { replace: true })
     }
   }, [authLoading, isAuthenticated, navigate])
 
+  // Whenever the logged-in user changes, clear the saved form data and reset to current user's details
   useEffect(() => {
-    const dataToSave = { ...formData, currentStep, customCategory }
-    localStorage.setItem('bookingFormData', JSON.stringify(dataToSave))
-  }, [formData, currentStep, customCategory])
+    if (user && user.email) {
+      // Clear localStorage saved data belonging to any user
+      localStorage.removeItem('bookingFormData')
+      // Reset form to current user's info
+      setFormData(prev => ({
+        ...prev,
+        customerName: user.name || '',
+        phone: user.phone || '',
+        email: user.email || ''
+      }))
+      setCurrentStep(1)
+      setIsOtherCategory(false)
+      setCustomCategory('')
+    }
+  }, [user?.email]) // Run only when user email changes (i.e., different user logged in)
+
+  // Save to localStorage on every change, but now we also store the user email
+  useEffect(() => {
+    if (user?.email) {
+      const dataToSave = { 
+        ...formData, 
+        currentStep, 
+        customCategory,
+        userEmail: user.email // store which user this data belongs to
+      }
+      localStorage.setItem('bookingFormData', JSON.stringify(dataToSave))
+    }
+  }, [formData, currentStep, customCategory, user?.email])
 
   const timeSlots = [
     { id: '9:00 AM - 11:00 AM', name: 'Morning 9-11', period: 'Morning' },
@@ -283,7 +316,6 @@ const BookNowPage = () => {
   }
 
   const handleSubmit = async () => {
-    // Validate all steps first
     if (!isStepValid(getTotalSteps())) {
       toast.error('Please complete all required fields.')
       return
@@ -293,17 +325,14 @@ const BookNowPage = () => {
     try {
       const finalData = { ...formData }
 
-      // Fix product category for "Other Electronics"
       if (isOtherCategory && customCategory.trim()) {
         finalData.productCategory = customCategory.trim()
       }
 
-      // Ensure issueDescription is never empty (required by backend)
       if (!needsIssueDescription() && !finalData.issueDescription.trim()) {
         finalData.issueDescription = 'Installation requested'
       }
 
-      // Clean phone and pincode
       finalData.phone = finalData.phone.replace(/\D/g, '').slice(0, 10)
       finalData.pincode = finalData.pincode.replace(/\D/g, '').slice(0, 6)
 
@@ -575,7 +604,6 @@ const BookNowPage = () => {
     return null
   }
 
-  // --- Early returns ---
   if (authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
