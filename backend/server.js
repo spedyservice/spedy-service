@@ -44,7 +44,6 @@ app.use((req, res, next) => {
   res.removeHeader('Cross-Origin-Opener-Policy');
   res.removeHeader('Cross-Origin-Embedder-Policy');
   res.removeHeader('Cross-Origin-Resource-Policy');
-  // Also prevent any future headers from being set by accident
   res.setHeader('Cross-Origin-Opener-Policy', 'unsafe-none');
   res.setHeader('Cross-Origin-Embedder-Policy', 'unsafe-none');
   next();
@@ -98,48 +97,7 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 connectDB();
 
-// ──────────────────────────────────────────────
-// ✨ Lightweight In-Memory Cache for Public Data
-// ──────────────────────────────────────────────
-const cacheStore = new Map();
-
-const cache = (ttlSeconds = 300) => {
-  return (req, res, next) => {
-    if (req.method !== 'GET') return next();
-    const key = req.originalUrl;
-    const now = Date.now();
-    const cached = cacheStore.get(key);
-
-    if (cached && cached.expiry > now) {
-      console.log(`⚡ Cache hit: ${key}`);
-      return res.status(200).json(cached.data);
-    }
-
-    const originalJson = res.json.bind(res);
-    res.json = (body) => {
-      if (res.statusCode === 200) {
-        cacheStore.set(key, {
-          data: body,
-          expiry: now + ttlSeconds * 1000
-        });
-      }
-      return originalJson(body);
-    };
-
-    next();
-  };
-};
-
-// Apply cache to public routes
-app.use('/api/banners', cache(600));
-app.use('/api/categories', cache(300));
-app.use('/api/brands', cache(300));
-app.use('/api/services', cache(300));
-app.use('/api/bookings/reviews/public', cache(120));
-app.use('/api/products', cache(120));
-app.use('/api/videos', cache(300));
-
-// ---------- API Routes ----------
+// ---------- API Routes (no caching) ----------
 app.use('/api/auth', authRoutes);
 app.use('/api/bookings', bookingRoutes);
 app.use('/api/services', serviceRoutes);
