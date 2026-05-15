@@ -4,7 +4,6 @@ const emailService = require('../utils/sendEmail');
 
 const normalizeImagePath = (img) => {
   if (!img || img.startsWith('http') || img.startsWith('data:')) return img;
-  // Remove any backslashes and prepend a single slash for relative paths
   return '/' + img.replace(/\\/g, '/');
 };
 
@@ -12,11 +11,13 @@ const createOrder = async (req, res) => {
   try {
     const { shippingAddress, paymentMethod = 'cod' } = req.body;
 
+    // Find user's cart
     const cart = await Cart.findOne({ user: req.user._id }).populate('items.product');
     if (!cart || cart.items.length === 0) {
       return res.status(400).json({ success: false, message: 'Cart is empty' });
     }
 
+    // Build order items
     const items = cart.items.map(item => ({
       product: item.product._id,
       name: item.product.name,
@@ -31,6 +32,7 @@ const createOrder = async (req, res) => {
     const shippingPrice = itemsPrice > 1000 ? 0 : 100;
     const totalPrice = itemsPrice + shippingPrice;
 
+    // Create order
     const order = await Order.create({
       user: req.user._id,
       items,
@@ -41,17 +43,19 @@ const createOrder = async (req, res) => {
       totalPrice
     });
 
-    // Clear cart
+    // Clear cart (important: do this after order is created)
     cart.items = [];
     await cart.save();
 
-    // Send confirmation emails to customer and admin
-    await emailService.sendOrderConfirmation(order, req.user.email);
+    // Send email in background – do NOT await, don't block response
+    emailService.sendOrderConfirmation(order, req.user.email)
+      .catch(err => console.error('Background email error (order confirmation):', err));
 
+    // Respond immediately
     res.status(201).json({ success: true, message: 'Order placed successfully', data: order });
   } catch (error) {
     console.error('Create order error:', error);
-    res.status(400).json({ success: false, message: error.message || 'Failed to create order' });
+    res.status(500).json({ success: false, message: error.message || 'Failed to create order' });
   }
 };
 
@@ -109,8 +113,10 @@ const updateOrderStatus = async (req, res) => {
     order.updatedAt = Date.now();
     await order.save();
 
+    // Send email in background (don't await)
     if (oldStatus !== status && order.user && order.user.email) {
-      await emailService.sendOrderStatusUpdate(order, order.user.email, oldStatus, status);
+      emailService.sendOrderStatusUpdate(order, order.user.email, oldStatus, status)
+        .catch(err => console.error('Background email error (order status):', err));
     }
 
     res.json({ success: true, message: `Order status updated to ${status}`, data: order });
@@ -133,4 +139,4 @@ const deleteOrder = async (req, res) => {
   }
 };
 
-module.exports = { createOrder, getOrderById, getMyOrders, updateOrderStatus, getAllOrders, deleteOrder };
+module.exports = { createOrder, getOrderById, getMyOrders, getAllOrders, updateOrderStatus, deleteOrder };
