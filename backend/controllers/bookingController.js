@@ -2,7 +2,7 @@ const Booking = require('../models/Booking');
 const emailService = require('../utils/sendEmail');
 
 /**
- * @desc    Create a new booking
+ * @desc    Create a new booking (OPTIMIZED: emails sent asynchronously)
  * @route   POST /api/bookings
  * @access  Public
  */
@@ -13,11 +13,14 @@ const createBooking = async (req, res) => {
       status: 'pending'
     };
 
+    // 1. Save booking to DB (fast)
     const booking = await Booking.create(bookingData);
 
-    // Send confirmation email
-    await emailService.sendBookingConfirmation(booking, booking.email);
+    // 2. Send email in the background – don't await, don't block response
+    emailService.sendBookingConfirmation(booking, booking.email)
+      .catch(err => console.error('Background email error (booking confirmation):', err));
 
+    // 3. Respond immediately
     res.status(201).json({
       success: true,
       message: 'Booking created successfully! Our team will contact you shortly.',
@@ -207,9 +210,10 @@ const updateBookingStatus = async (req, res) => {
 
     await booking.save();
 
-    // Send status update email
+    // Send status update email in background (don't block)
     if (oldStatus !== status) {
-      await emailService.sendBookingStatusUpdate(booking, booking.email, oldStatus, status);
+      emailService.sendBookingStatusUpdate(booking, booking.email, oldStatus, status)
+        .catch(err => console.error('Background email error (status update):', err));
     }
 
     res.json({
@@ -261,8 +265,9 @@ const cancelBooking = async (req, res) => {
 
     await booking.cancel(cancellationReason || 'Cancelled by customer');
 
-    // Send cancellation email
-    await emailService.sendBookingStatusUpdate(booking, booking.email, booking.status, 'cancelled');
+    // Send cancellation email in background
+    emailService.sendBookingStatusUpdate(booking, booking.email, booking.status, 'cancelled')
+      .catch(err => console.error('Background email error (cancellation):', err));
 
     res.json({
       success: true,
