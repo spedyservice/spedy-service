@@ -17,14 +17,15 @@ const AuthCallbackPage = () => {
       return;
     }
 
-    // Save token immediately so future API calls use it
+    // Save token immediately
     localStorage.setItem('token', token);
     
-    // Use the api instance (which already has the token interceptor)
     api.get('/auth/profile')
       .then(response => {
         if (response.success && response.data) {
           const userData = response.data;
+          // ✅ CRITICAL: attach token to user object so AuthContext recognizes it
+          userData.token = token;
           localStorage.setItem('user', JSON.stringify(userData));
           setUser(userData);
           setIsAdmin(userData.role === 'admin');
