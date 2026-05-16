@@ -77,7 +77,8 @@ function App() {
     location.pathname === '/contact' ||
     location.pathname === '/my-bookings' ||
     location.pathname === '/forgot-password' ||
-    location.pathname === '/reset-password';
+    location.pathname === '/reset-password' ||
+    location.pathname === '/my-orders';
 
   useEffect(() => {
     window.scrollTo(0, 0);

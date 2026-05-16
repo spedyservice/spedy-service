@@ -38,16 +38,16 @@ const MyOrdersPage = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center pt-[65px] md:pt-[80px]">
         <FaSpinner className="w-10 h-10 text-blue-600 animate-spin" />
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 pt-[72px]">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6 md:py-10">
-        <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-6">My Orders</h1>
+    <div className="min-h-screen bg-gray-50 pt-[65px] md:pt-[80px]">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6 md:py-8">
+        <h1 className="text-xl md:text-2xl font-bold text-gray-900 mb-5">My Orders</h1>
 
         {orders.length === 0 ? (
           <div className="bg-white rounded-2xl shadow-sm p-12 text-center">
@@ -60,40 +60,53 @@ const MyOrdersPage = () => {
           </div>
         ) : (
           <div className="space-y-4">
-            {orders.map((order) => (
-              <motion.div
-                key={order._id}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="bg-white rounded-xl shadow-sm p-4 md:p-5"
-              >
-                <div className="flex flex-wrap justify-between items-start gap-3 mb-3">
-                  <div>
-                    <p className="text-xs text-gray-500">Order ID</p>
-                    <p className="font-mono font-semibold text-sm">{order._id}</p>
+            {orders.map((order) => {
+              // Get product names from items
+              const productNames = order.items.map(item => item.name).filter(Boolean);
+              const displayNames = productNames.slice(0, 2);
+              const extraCount = productNames.length - displayNames.length;
+              const productText = displayNames.join(', ') + (extraCount > 0 ? ` and ${extraCount} more` : '');
+
+              return (
+                <motion.div
+                  key={order._id}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="bg-white rounded-xl shadow-sm p-4 md:p-5"
+                >
+                  <div className="flex flex-wrap justify-between items-start gap-3 mb-2">
+                    <div>
+                      <p className="text-xs text-gray-500">Order ID</p>
+                      <p className="font-mono font-semibold text-sm">{order._id.slice(-8)}</p>
+                    </div>
+                    <span className={`px-3 py-0.5 rounded-full text-xs font-semibold capitalize ${getStatusColor(order.orderStatus)}`}>
+                      {order.orderStatus}
+                    </span>
                   </div>
-                  <span className={`px-3 py-0.5 rounded-full text-xs font-semibold capitalize ${getStatusColor(order.orderStatus)}`}>
-                    {order.orderStatus}
-                  </span>
-                </div>
 
-                <div className="flex flex-wrap gap-4 text-sm text-gray-600 mb-3">
-                  <span>{order.items.length} item(s)</span>
-                  <span>•</span>
-                  <span>{new Date(order.createdAt).toLocaleDateString('en-IN')}</span>
-                </div>
+                  {/* Product names */}
+                  {productText && (
+                    <p className="text-sm text-gray-700 mb-2 line-clamp-1">{productText}</p>
+                  )}
 
-                <div className="flex items-center justify-between">
-                  <span className="text-lg font-bold text-gray-900">₹{order.totalPrice}</span>
-                  <Link
-                    to={`/order/${order._id}`}
-                    className="flex items-center gap-1 text-blue-600 hover:text-blue-700 font-medium text-sm"
-                  >
-                    <FaEye size={14} /> View Details
-                  </Link>
-                </div>
-              </motion.div>
-            ))}
+                  <div className="flex flex-wrap gap-4 text-xs text-gray-500 mb-3">
+                    <span>{order.items.length} item(s)</span>
+                    <span>•</span>
+                    <span>{new Date(order.createdAt).toLocaleDateString('en-IN')}</span>
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <span className="text-base font-bold text-gray-900">₹{order.totalPrice}</span>
+                    <Link
+                      to={`/order/${order._id}`}
+                      className="flex items-center gap-1 text-blue-600 hover:text-blue-700 font-medium text-sm"
+                    >
+                      <FaEye size={14} /> View Details
+                    </Link>
+                  </div>
+                </motion.div>
+              );
+            })}
           </div>
         )}
       </div>

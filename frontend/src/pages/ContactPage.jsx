@@ -32,7 +32,7 @@ const ContactPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 pt-2 pb-12">
+    <div className="min-h-screen bg-gray-50 pt-10 pb-12">
       <div className="container-custom max-w-6xl mx-auto px-4 sm:px-6">
         <motion.div
           initial={{ opacity: 0, y: 20 }}

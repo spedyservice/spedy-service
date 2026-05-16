@@ -79,7 +79,7 @@ const ServicesPage = () => {
     <div className="min-h-screen bg-gray-50">
 
       {/* Page Header – compact */}
-      <div className="bg-white border-b border-gray-100 py-8 md:py-10">
+      <div className="bg-white border-b border-gray-100 py-10 md:py-10">
         <div className="container-custom text-center">
           <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-1">
             Our Repair Services
@@ -92,7 +92,7 @@ const ServicesPage = () => {
       </div>
 
       {/* Services Content */}
-      <div className="container-custom py-8 md:py-10">
+      <div className="container-custom py-4 md:py-8">
 
         {/* Search Bar */}
         <div className="max-w-md mx-auto mb-8">
