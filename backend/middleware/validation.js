@@ -64,7 +64,7 @@ const loginValidation = [
 ];
 
 /**
- * Booking creation validation rules
+ * Booking creation validation rules – email is now optional
  */
 const createBookingValidation = [
   body('customerName')
@@ -73,8 +73,7 @@ const createBookingValidation = [
     .isLength({ min: 2, max: 100 }).withMessage('Name must be between 2 and 100 characters'),
   
   body('email')
-    .trim()
-    .notEmpty().withMessage('Email is required')
+    .optional({ checkFalsy: true })   // ✅ email is optional
     .isEmail().withMessage('Please provide a valid email address'),
   
   body('phone')

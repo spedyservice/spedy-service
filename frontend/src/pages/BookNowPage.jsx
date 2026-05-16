@@ -13,9 +13,8 @@ import {
 import bookingService from '../services/bookingService'
 import brandService from '../services/brandService'
 import serviceService from '../services/serviceService'
-import { useAuth } from '../context/AuthContext'
 
-// ---------- helpers (unchanged) ----------
+// ---------- helpers ----------
 const getIconForCategory = (categoryName) => {
   const name = categoryName.toLowerCase()
   if (name.includes('tv') || name.includes('led') || name.includes('lcd')) return FaTv
@@ -76,16 +75,11 @@ const installableProducts = [
   'Microwave Oven'
 ]
 
-// Helper to load saved data only if it belongs to current user
-const loadSavedData = (currentUserEmail) => {
+const loadSavedData = () => {
   const saved = localStorage.getItem('bookingFormData')
   if (saved) {
     try {
       const parsed = JSON.parse(saved)
-      // If the saved data has a userEmail and it doesn't match current user, ignore it
-      if (parsed.userEmail && parsed.userEmail !== currentUserEmail) {
-        return null
-      }
       return {
         formData: {
           productCategory: parsed.productCategory || '',
@@ -102,7 +96,9 @@ const loadSavedData = (currentUserEmail) => {
         },
         currentStep: parsed.currentStep || 1,
         isOtherCategory: parsed.productCategory === 'Other Electronics',
-        customCategory: parsed.customCategory || ''
+        customCategory: parsed.customCategory || '',
+        isOtherBrand: parsed.isOtherBrand || false,
+        customBrandText: parsed.customBrandText || ''
       }
     } catch (e) {}
   }
@@ -110,11 +106,8 @@ const loadSavedData = (currentUserEmail) => {
 }
 
 const BookNowPage = () => {
-  const { user, isAuthenticated, loading: authLoading } = useAuth()
   const navigate = useNavigate()
-
-  // Load saved data only if it matches current user email
-  const saved = user?.email ? loadSavedData(user.email) : null
+  const saved = loadSavedData()
 
   const [brands, setBrands] = useState([])
   const [categories, setCategories] = useState([])
@@ -124,14 +117,17 @@ const BookNowPage = () => {
 
   const [isOtherCategory, setIsOtherCategory] = useState(saved?.isOtherCategory || false)
   const [customCategory, setCustomCategory] = useState(saved?.customCategory || '')
+  const [isOtherBrand, setIsOtherBrand] = useState(saved?.isOtherBrand || false)
+  const [customBrandText, setCustomBrandText] = useState(saved?.customBrandText || '')
+  
   const [formData, setFormData] = useState(saved?.formData || {
     productCategory: '',
     serviceType: 'repair',
     brandName: '',
     issueDescription: '',
-    customerName: user?.name || '',
-    phone: user?.phone || '',
-    email: user?.email || '',
+    customerName: '',
+    phone: '',
+    email: '',
     address: '',
     pincode: '',
     preferredDate: '',
@@ -139,43 +135,17 @@ const BookNowPage = () => {
   })
   const [currentStep, setCurrentStep] = useState(saved?.currentStep || 1)
 
-  // Redirect if not authenticated
+  // Save to localStorage on every change (guest)
   useEffect(() => {
-    if (!authLoading && !isAuthenticated) {
-      navigate('/login?redirect=/book-now', { replace: true })
+    const dataToSave = { 
+      ...formData, 
+      currentStep, 
+      customCategory,
+      isOtherBrand,
+      customBrandText
     }
-  }, [authLoading, isAuthenticated, navigate])
-
-  // Whenever the logged-in user changes, clear the saved form data and reset to current user's details
-  useEffect(() => {
-    if (user && user.email) {
-      // Clear localStorage saved data belonging to any user
-      localStorage.removeItem('bookingFormData')
-      // Reset form to current user's info
-      setFormData(prev => ({
-        ...prev,
-        customerName: user.name || '',
-        phone: user.phone || '',
-        email: user.email || ''
-      }))
-      setCurrentStep(1)
-      setIsOtherCategory(false)
-      setCustomCategory('')
-    }
-  }, [user?.email]) // Run only when user email changes (i.e., different user logged in)
-
-  // Save to localStorage on every change, but now we also store the user email
-  useEffect(() => {
-    if (user?.email) {
-      const dataToSave = { 
-        ...formData, 
-        currentStep, 
-        customCategory,
-        userEmail: user.email // store which user this data belongs to
-      }
-      localStorage.setItem('bookingFormData', JSON.stringify(dataToSave))
-    }
-  }, [formData, currentStep, customCategory, user?.email])
+    localStorage.setItem('bookingFormData', JSON.stringify(dataToSave))
+  }, [formData, currentStep, customCategory, isOtherBrand, customBrandText])
 
   const timeSlots = [
     { id: '9:00 AM - 11:00 AM', name: 'Morning 9-11', period: 'Morning' },
@@ -229,6 +199,23 @@ const BookNowPage = () => {
       setIsOtherCategory(value === 'Other Electronics')
       if (value !== 'Other Electronics') setCustomCategory('')
     }
+    if (field === 'brandName') {
+      if (value !== '' && value !== null) {
+        setIsOtherBrand(false)
+        setCustomBrandText('')
+      }
+    }
+  }
+
+  const handleOtherBrandClick = () => {
+    setIsOtherBrand(true)
+    setFormData(prev => ({ ...prev, brandName: customBrandText || '' }))
+  }
+
+  const handleCustomBrandChange = (e) => {
+    const val = e.target.value
+    setCustomBrandText(val)
+    setFormData(prev => ({ ...prev, brandName: val }))
   }
 
   const selectedProductSupportsInstallation = () => {
@@ -268,13 +255,19 @@ const BookNowPage = () => {
       return true
     }
     if (step === s++) {
-      return formData.brandName !== ''
+      // Brand step validation
+      if (isOtherBrand) {
+        return customBrandText.trim() !== ''
+      } else {
+        return formData.brandName !== ''
+      }
     }
     if (needsIssueDescription() && step === s++) {
       return formData.issueDescription !== ''
     }
     if (step === s++) {
-      return formData.customerName && formData.phone && formData.email && formData.address && formData.pincode
+      // Customer details: name, phone, address, pincode required; email optional
+      return formData.customerName && formData.phone && formData.address && formData.pincode
     }
     if (step === s++) {
       return formData.preferredDate && formData.timeSlot
@@ -340,7 +333,7 @@ const BookNowPage = () => {
       if (response.success) {
         toast.success('Booking created successfully!')
         localStorage.removeItem('bookingFormData')
-        navigate('/my-bookings')
+        navigate('/')
       }
     } catch (error) {
       toast.error(error.response?.data?.message || 'Failed to create booking')
@@ -353,7 +346,6 @@ const BookNowPage = () => {
     cat.name.toLowerCase().includes(searchTerm.toLowerCase())
   )
 
-  // --- Step rendering components (unchanged) ---
   const renderStepIndicator = () => {
     const total = getTotalSteps()
     const stepsArray = Array.from({ length: total }, (_, i) => i + 1)
@@ -458,19 +450,46 @@ const BookNowPage = () => {
       <h2 className="text-xl md:text-2xl font-bold text-center mb-4">Select Brand</h2>
       {loading ? (
         <div className="text-center py-8"><FaSpinner className="w-8 h-8 text-blue-600 animate-spin mx-auto mb-2" /><p className="text-gray-500">Loading brands...</p></div>
-      ) : brands.length === 0 ? (
-        <div className="text-center py-8"><p className="text-gray-500">No brands available.</p></div>
       ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 md:gap-3">
-          {brands.map((brand) => {
-            const brandName = typeof brand === 'string' ? brand : brand.name
-            const isSelected = formData.brandName === brandName
-            return (
-              <button key={brandName} onClick={() => updateFormData('brandName', brandName)} className={`p-2 md:p-3 rounded-lg border-2 transition-all text-sm ${isSelected ? 'border-blue-600 bg-blue-50 text-blue-700 font-semibold' : 'border-gray-200 hover:border-blue-300 text-gray-700'}`}>
-                {brandName}
-              </button>
-            )
-          })}
+        <div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 md:gap-3 mb-4">
+            {brands.map((brand) => {
+              const brandName = typeof brand === 'string' ? brand : brand.name
+              const isSelected = formData.brandName === brandName && !isOtherBrand
+              return (
+                <button
+                  key={brandName}
+                  onClick={() => {
+                    setIsOtherBrand(false)
+                    setCustomBrandText('')
+                    updateFormData('brandName', brandName)
+                  }}
+                  className={`p-2 md:p-3 rounded-lg border-2 transition-all text-sm ${isSelected ? 'border-blue-600 bg-blue-50 text-blue-700 font-semibold' : 'border-gray-200 hover:border-blue-300 text-gray-700'}`}
+                >
+                  {brandName}
+                </button>
+              )
+            })}
+            <button
+              onClick={handleOtherBrandClick}
+              className={`p-2 md:p-3 rounded-lg border-2 transition-all text-sm ${isOtherBrand ? 'border-blue-600 bg-blue-50 text-blue-700 font-semibold' : 'border-gray-200 hover:border-blue-300 text-gray-700'}`}
+            >
+              Other
+            </button>
+          </div>
+          {isOtherBrand && (
+            <div className="mt-3">
+              <input
+                type="text"
+                placeholder="Please specify your brand name"
+                value={customBrandText}
+                onChange={handleCustomBrandChange}
+                className="w-full p-3 border border-gray-300 rounded-lg focus:border-blue-500 outline-none text-sm"
+                autoFocus
+              />
+              <p className="text-xs text-gray-500 mt-1">Enter your appliance brand (e.g., Voltas, Whirlpool, etc.)</p>
+            </div>
+          )}
         </div>
       )}
     </motion.div>
@@ -494,11 +513,25 @@ const BookNowPage = () => {
     <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-4">
       <h2 className="text-xl md:text-2xl font-bold text-center mb-4">Customer Details</h2>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-        <div className="relative"><FaUser className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" /><input type="text" placeholder="Full Name" value={formData.customerName} onChange={(e) => updateFormData('customerName', e.target.value)} className="w-full pl-10 pr-3 py-2 md:py-3 border rounded-lg focus:border-blue-500 outline-none text-sm" required /></div>
-        <div className="relative"><FaPhone className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" /><input type="tel" placeholder="Phone Number" maxLength={10} value={formData.phone} onChange={(e) => updateFormData('phone', e.target.value.replace(/\D/g, '').slice(0,10))} className="w-full pl-10 pr-3 py-2 md:py-3 border rounded-lg focus:border-blue-500 outline-none text-sm" required /></div>
-        <div className="relative md:col-span-2"><FaEnvelope className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" /><input type="email" placeholder="Email Address" value={formData.email} onChange={(e) => updateFormData('email', e.target.value)} className="w-full pl-10 pr-3 py-2 md:py-3 border rounded-lg focus:border-blue-500 outline-none text-sm" required /></div>
-        <div className="relative md:col-span-2"><FaMapMarkerAlt className="absolute left-3 top-3 text-gray-400" /><textarea rows="2" placeholder="Complete Address with Landmark" value={formData.address} onChange={(e) => updateFormData('address', e.target.value)} className="w-full pl-10 pr-3 py-2 border rounded-lg focus:border-blue-500 outline-none text-sm" required /></div>
-        <div className="relative"><input type="text" placeholder="Pincode" maxLength="6" value={formData.pincode} onChange={(e) => updateFormData('pincode', e.target.value.replace(/\D/g, '').slice(0,6))} className="w-full px-3 py-2 md:py-3 border rounded-lg focus:border-blue-500 outline-none text-sm" required /></div>
+        <div className="relative">
+          <FaUser className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+          <input type="text" placeholder="Full Name *" value={formData.customerName} onChange={(e) => updateFormData('customerName', e.target.value)} className="w-full pl-10 pr-3 py-2 md:py-3 border rounded-lg focus:border-blue-500 outline-none text-sm" required />
+        </div>
+        <div className="relative">
+          <FaPhone className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+          <input type="tel" placeholder="Phone Number *" maxLength={10} value={formData.phone} onChange={(e) => updateFormData('phone', e.target.value.replace(/\D/g, '').slice(0,10))} className="w-full pl-10 pr-3 py-2 md:py-3 border rounded-lg focus:border-blue-500 outline-none text-sm" required />
+        </div>
+        <div className="relative md:col-span-2">
+          <FaEnvelope className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+          <input type="email" placeholder="Email Address (optional)" value={formData.email} onChange={(e) => updateFormData('email', e.target.value)} className="w-full pl-10 pr-3 py-2 md:py-3 border rounded-lg focus:border-blue-500 outline-none text-sm" />
+        </div>
+        <div className="relative md:col-span-2">
+          <FaMapMarkerAlt className="absolute left-3 top-3 text-gray-400" />
+          <textarea rows="2" placeholder="Complete Address with Landmark *" value={formData.address} onChange={(e) => updateFormData('address', e.target.value)} className="w-full pl-10 pr-3 py-2 border rounded-lg focus:border-blue-500 outline-none text-sm" required />
+        </div>
+        <div className="relative">
+          <input type="text" placeholder="Pincode *" maxLength="6" value={formData.pincode} onChange={(e) => updateFormData('pincode', e.target.value.replace(/\D/g, '').slice(0,6))} className="w-full px-3 py-2 md:py-3 border rounded-lg focus:border-blue-500 outline-none text-sm" required />
+        </div>
       </div>
     </motion.div>
   )
@@ -604,19 +637,6 @@ const BookNowPage = () => {
     return null
   }
 
-  if (authLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <FaSpinner className="w-10 h-10 text-blue-600 animate-spin" />
-      </div>
-    )
-  }
-
-  if (!isAuthenticated) {
-    return null
-  }
-
-  // ✅ FIX: Added top padding to clear fixed navbar
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 pt-[65px] md:pt-[80px] pb-8 md:pb-12">
       <div className="container-custom max-w-4xl mx-auto px-4">

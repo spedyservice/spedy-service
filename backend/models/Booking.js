@@ -17,13 +17,17 @@ const bookingSchema = new mongoose.Schema({
   },
   email: {
     type: String,
-    required: [true, 'Please add email'],
+    required: false, // ✅ email is now optional
     lowercase: true,
     trim: true,
-    match: [
-      /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/,
-      'Please add a valid email address'
-    ]
+    // Validate only if email is provided
+    validate: {
+      validator: function(v) {
+        if (!v) return true; // empty string or null is allowed
+        return /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test(v);
+      },
+      message: 'Please add a valid email address'
+    }
   },
   phone: {
     type: String,
@@ -323,13 +327,11 @@ bookingSchema.statics.getDailyBookings = async function(days = 7) {
 // ============ VIRTUAL PROPERTIES ============
 
 bookingSchema.virtual('ageInDays').get(function() {
-  // Safe guard against missing createdAt
   if (!this.createdAt) return null;
   return Math.ceil((Date.now() - this.createdAt) / (1000 * 60 * 60 * 24));
 });
 
 bookingSchema.virtual('formattedDate').get(function() {
-  // Safe guard against missing createdAt
   if (!this.createdAt) return 'N/A';
   return this.createdAt.toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric' });
 });

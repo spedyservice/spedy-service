@@ -69,6 +69,8 @@ const allowedOrigins = [
   'https://spedy-service.vercel.app',
   'http://localhost:3000',
   'http://localhost:5173',
+  'http://localhost:5000',    // ✅ added for local frontend (Vite runs on 5000)
+  'http://127.0.0.1:5000',    // ✅ optional for safety
 ].filter(Boolean);
 
 app.use(
