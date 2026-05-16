@@ -1,3 +1,8 @@
+const dns = require('dns');
+
+// Force IPv4 DNS globally — fixes Render ENETUNREACH on Gmail SMTP
+dns.setDefaultResultOrder('ipv4first');
+
 const express = require('express');
 const mongoose = require('mongoose');
 const dotenv = require('dotenv');

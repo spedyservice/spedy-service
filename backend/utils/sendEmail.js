@@ -1,4 +1,8 @@
 const nodemailer = require('nodemailer');
+const dns = require('dns');
+
+// Force Node.js to prefer IPv4 for ALL DNS lookups globally
+dns.setDefaultResultOrder('ipv4first');
 
 const ADMIN_EMAIL = 'spedyservice40@gmail.com';
 
@@ -37,27 +41,31 @@ class EmailService {
     try {
       this.transporter = nodemailer.createTransport({
         host: EMAIL_HOST || 'smtp.gmail.com',
-
-        // PORT 465 + secure:true uses SSL directly
-        // This bypasses Render's IPv6/port-587 block
         port: parseInt(EMAIL_PORT || '465'),
-        secure: true, // true for 465, false for 587
+        secure: true, // true for port 465 (SSL)
 
         auth: {
           user: EMAIL_USER,
           pass: EMAIL_PASS,
         },
 
-        // Force IPv4 — prevents ENETUNREACH on Render
+        // Force IPv4 at nodemailer level
         family: 4,
 
         tls: {
           rejectUnauthorized: false,
+          // Force IPv4 at TLS level too
+          minVersion: 'TLSv1.2',
         },
 
-        connectionTimeout: 15000,
-        greetingTimeout: 15000,
-        socketTimeout: 15000,
+        connectionTimeout: 20000,
+        greetingTimeout: 20000,
+        socketTimeout: 20000,
+
+        // Custom DNS resolver that only returns IPv4
+        dnsOptions: {
+          family: 4,
+        },
       });
 
       this.isConfigured = true;
