@@ -10,11 +10,11 @@ const BrandsSection = React.lazy(() => import('../components/home/BrandsSection'
 const FeaturedProducts = React.lazy(() => import('../components/home/FeaturedProducts'));
 const VideoSection = React.lazy(() => import('../components/home/VideoSection'));
 const ExpertSection = React.lazy(() => import('../components/home/ExpertSection'));
+const MapSection = React.lazy(() => import('../components/home/MapSection')); // ✅ New Map section
 const HowItWorks = React.lazy(() => import('../components/home/HowItWorks'));
 const WhyChooseUs = React.lazy(() => import('../components/home/WhyChooseUs'));
 const Testimonials = React.lazy(() => import('../components/home/Testimonials'));
 
-// Minimal loading placeholder
 const SectionLoader = () => (
   <div className="flex justify-center py-10">
     <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
@@ -24,54 +24,59 @@ const SectionLoader = () => (
 const HomePage = () => {
   return (
     <>
-      {/* 1. Category icon strip – right under navbar (always loaded) */}
+      {/* 1. Category icon strip – under navbar */}
       <ProductCategorySection />
 
-      {/* 2. Hero banner slider (always loaded) */}
+      {/* 2. Hero banner slider */}
       <Hero />
 
-      {/* 3. Trust features bar (always loaded) */}
+      {/* 3. Trust features bar */}
       <TrustFeatures />
 
       {/* 4. Service cards (We Repair and Service…) */}
       <ImageServicesSection />
 
-      {/* 5. All repair services (lazy) */}
+      {/* 5. All repair services */}
       <Suspense fallback={<SectionLoader />}>
         <ServicesSection />
       </Suspense>
 
-      {/* 6. Brands marquee (lazy) */}
+      {/* 6. Brands marquee */}
       <Suspense fallback={<SectionLoader />}>
         <BrandsSection />
       </Suspense>
 
-      {/* 7. Featured products (lazy) */}
+      {/* 7. Featured products */}
       <Suspense fallback={<SectionLoader />}>
         <FeaturedProducts />
       </Suspense>
 
-      {/* 8. Video section – "See It to Shop It" (lazy) */}
+      {/* 8. Video section – "See It to Shop It" */}
       <Suspense fallback={<SectionLoader />}>
         <VideoSection />
       </Suspense>
 
-      {/* 9. Meet Our Expert (lazy) */}
+      {/* 9. Meet Our Expert */}
       <Suspense fallback={<SectionLoader />}>
         <ExpertSection />
       </Suspense>
 
-      {/* 10. How it works (lazy) */}
+      {/* 10. Map section – Our Location */}
+      <Suspense fallback={<SectionLoader />}>
+        <MapSection />
+      </Suspense>
+
+      {/* 11. How it works */}
       <Suspense fallback={<SectionLoader />}>
         <HowItWorks />
       </Suspense>
 
-      {/* 11. Why choose us (lazy) */}
+      {/* 12. Why choose us */}
       <Suspense fallback={<SectionLoader />}>
         <WhyChooseUs />
       </Suspense>
 
-      {/* 12. Testimonials (lazy) */}
+      {/* 13. Testimonials */}
       <Suspense fallback={<SectionLoader />}>
         <Testimonials />
       </Suspense>
