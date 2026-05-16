@@ -27,27 +27,27 @@ class EmailService {
 
     try {
       // Use Gmail service if no custom host provided (like your previous project)
-      if (!EMAIL_HOST || EMAIL_HOST === 'smtp.gmail.com') {
-        this.transporter = nodemailer.createTransport({
-          service: 'gmail',
-          auth: {
-            user: EMAIL_USER,
-            pass: EMAIL_PASS,
-          },
-        });
-      } else {
-        // Custom SMTP (if needed)
-        this.transporter = nodemailer.createTransport({
-          host: EMAIL_HOST,
-          port: parseInt(EMAIL_PORT || '587'),
-          secure: EMAIL_PORT === '465',
-          auth: {
-            user: EMAIL_USER,
-            pass: EMAIL_PASS,
-          },
-          tls: { rejectUnauthorized: false }
-        });
-      }
+            // Production-safe SMTP transporter for Render
+      this.transporter = nodemailer.createTransport({
+        host: EMAIL_HOST || 'smtp.gmail.com',
+        port: parseInt(EMAIL_PORT || '587'),
+        secure: false,
+        auth: {
+          user: EMAIL_USER,
+          pass: EMAIL_PASS,
+        },
+
+        // Force IPv4 (fixes Render ENETUNREACH issue)
+        family: 4,
+
+        tls: {
+          rejectUnauthorized: false,
+        },
+
+        connectionTimeout: 10000,
+        greetingTimeout: 10000,
+        socketTimeout: 10000,
+      });
 
       this.isConfigured = true;
       console.log('✅ Email service configured successfully');
