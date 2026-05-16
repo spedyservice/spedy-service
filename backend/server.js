@@ -11,10 +11,10 @@ const rateLimit = require('express-rate-limit');
 const session = require('express-session');
 const passport = require('passport');
 
-// Load env vars
+// Load environment variables
 dotenv.config();
 
-// Import routes
+// ================= IMPORT ROUTES =================
 const authRoutes = require('./routes/authRoutes');
 const bookingRoutes = require('./routes/bookingRoutes');
 const serviceRoutes = require('./routes/serviceRoutes');
@@ -29,88 +29,73 @@ const reviewRoutes = require('./routes/reviewRoutes');
 const bannerRoutes = require('./routes/bannerRoutes');
 const videoRoutes = require('./routes/videoRoutes');
 
-// Import DB connection
+// ================= IMPORT DATABASE =================
 const connectDB = require('./config/db');
 
-// Import Google OAuth strategy
+// ================= GOOGLE AUTH =================
 const { initGoogleStrategy } = require('./services/googleAuthService');
 
+// ================= CREATE APP =================
 const app = express();
 
 // ================= TRUST PROXY =================
 app.set('trust proxy', 1);
 
-// ========== SECURITY & MIDDLEWARE ==========
+// ================= DATABASE CONNECTION =================
+connectDB();
 
-// Compression for faster responses
+// ================= SECURITY =================
 app.use(compression());
 
-// Security headers
 app.use(
   helmet({
     contentSecurityPolicy: false,
     crossOriginEmbedderPolicy: false,
     crossOriginOpenerPolicy: false,
-    crossOriginResourcePolicy: { policy: 'cross-origin' },
-    xFrameOptions: false,
-  })
-);
-
-// Session middleware
-app.use(
-  session({
-    secret: process.env.JWT_SECRET || 'session_secret',
-    resave: false,
-    saveUninitialized: false,
-    proxy: true,
-    cookie: {
-      secure: process.env.NODE_ENV === 'production',
-      httpOnly: true,
-      sameSite:
-        process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-      maxAge: 24 * 60 * 60 * 1000,
+    crossOriginResourcePolicy: {
+      policy: 'cross-origin',
     },
   })
 );
 
-// Initialize Passport
-app.use(passport.initialize());
-app.use(passport.session());
-initGoogleStrategy();
-
 // ================= CORS =================
-const allowedOrigins =
-  process.env.NODE_ENV === 'production'
-    ? [
-        process.env.FRONTEND_URL,
-        'https://spedy-service.vercel.app',
-      ].filter(Boolean)
-    : true;
+const allowedOrigins = [
+  process.env.FRONTEND_URL,
+  'https://spedy-service.vercel.app',
+  'http://localhost:3000',
+  'http://localhost:5173',
+].filter(Boolean);
 
 app.use(
   cors({
-    origin: allowedOrigins,
+    origin: function (origin, callback) {
+
+      // allow requests without origin
+      if (!origin) {
+        return callback(null, true);
+      }
+
+      if (allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(
+          new Error('Not allowed by CORS')
+        );
+      }
+    },
+
     credentials: true,
   })
 );
 
-// ================= RATE LIMIT =================
-const limiter = rateLimit({
-  windowMs: 5 * 60 * 1000,
-  max: process.env.NODE_ENV === 'production' ? 1000 : 10000,
-  standardHeaders: true,
-  legacyHeaders: false,
-  message: {
-    success: false,
-    message: 'Too many requests, please try again later.',
-  },
-});
-
-app.use('/api', limiter);
-
 // ================= BODY PARSER =================
 app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+app.use(
+  express.urlencoded({
+    extended: true,
+    limit: '10mb',
+  })
+);
 
 // ================= LOGGING =================
 if (process.env.NODE_ENV === 'development') {
@@ -119,19 +104,78 @@ if (process.env.NODE_ENV === 'development') {
   app.use(morgan('combined'));
 }
 
+// ================= RATE LIMIT =================
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+
+  max:
+    process.env.NODE_ENV === 'production'
+      ? 1000
+      : 10000,
+
+  standardHeaders: true,
+  legacyHeaders: false,
+
+  message: {
+    success: false,
+    message:
+      'Too many requests. Please try again later.',
+  },
+});
+
+app.use('/api', apiLimiter);
+
+// ================= SESSION =================
+app.use(
+  session({
+    secret:
+      process.env.SESSION_SECRET ||
+      process.env.JWT_SECRET ||
+      'spedy_secret',
+
+    resave: false,
+    saveUninitialized: false,
+
+    cookie: {
+      secure:
+        process.env.NODE_ENV === 'production',
+
+      httpOnly: true,
+
+      sameSite:
+        process.env.NODE_ENV === 'production'
+          ? 'none'
+          : 'lax',
+
+      maxAge: 24 * 60 * 60 * 1000,
+    },
+  })
+);
+
+// ================= PASSPORT =================
+app.use(passport.initialize());
+app.use(passport.session());
+
+initGoogleStrategy();
+
 // ================= UPLOADS =================
-const uploadsDir = path.join(__dirname, 'uploads');
+const uploadsDir = path.join(
+  __dirname,
+  'uploads'
+);
 
 if (!fs.existsSync(uploadsDir)) {
-  fs.mkdirSync(uploadsDir, { recursive: true });
+  fs.mkdirSync(uploadsDir, {
+    recursive: true,
+  });
 }
 
-app.use('/uploads', express.static(uploadsDir));
+app.use(
+  '/uploads',
+  express.static(uploadsDir)
+);
 
-// ================= DATABASE =================
-connectDB();
-
-// ================= ROUTES =================
+// ================= API ROUTES =================
 app.use('/api/auth', authRoutes);
 app.use('/api/bookings', bookingRoutes);
 app.use('/api/services', serviceRoutes);
@@ -146,28 +190,41 @@ app.use('/api/reviews', reviewRoutes);
 app.use('/api/banners', bannerRoutes);
 app.use('/api/videos', videoRoutes);
 
-// ================= HEALTH CHECK =================
-app.get('/health', (req, res) => {
-  res.status(200).json({
-    success: true,
-    status: 'OK',
-    uptime: process.uptime(),
-    mongodb:
-      mongoose.connection.readyState === 1
-        ? 'connected'
-        : 'disconnected',
-    environment: process.env.NODE_ENV,
-    timestamp: new Date().toISOString(),
-  });
+// ================= HEALTH ROUTE =================
+app.get('/health', async (req, res) => {
+  try {
+    res.status(200).json({
+      success: true,
+      status: 'OK',
+
+      uptime: process.uptime(),
+
+      mongodb:
+        mongoose.connection.readyState === 1
+          ? 'connected'
+          : 'disconnected',
+
+      environment:
+        process.env.NODE_ENV || 'development',
+
+      timestamp: new Date().toISOString(),
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
 });
 
-// ================= ROOT =================
+// ================= ROOT ROUTE =================
 app.get('/', (req, res) => {
-  res.json({
+  res.status(200).json({
     success: true,
-    message: 'Spedy Service API is running',
-    version: '1.0.0',
-    environment: process.env.NODE_ENV || 'development',
+    message: 'Spedy Service API Running 🚀',
+    environment:
+      process.env.NODE_ENV || 'development',
   });
 });
 
@@ -175,56 +232,132 @@ app.get('/', (req, res) => {
 app.use((req, res) => {
   res.status(404).json({
     success: false,
-    message: `Route ${req.originalUrl} not found`,
+    message: `Route not found: ${req.originalUrl}`,
   });
 });
 
 // ================= GLOBAL ERROR =================
 app.use((err, req, res, next) => {
-  console.error('Error:', err);
+  console.error('❌ Global Error:', err);
 
   res.status(err.statusCode || 500).json({
     success: false,
-    message: err.message || 'Internal Server Error',
-    ...(process.env.NODE_ENV === 'development' && {
-      stack: err.stack,
-    }),
+
+    message:
+      process.env.NODE_ENV === 'production'
+        ? err.message || 'Internal Server Error'
+        : err.stack,
   });
 });
 
-// ================= START SERVER =================
+// ================= SERVER =================
 const PORT = process.env.PORT || 5001;
 
-const server = app.listen(PORT, '0.0.0.0', () => {
-  console.log(`🚀 Server running on port ${PORT}`);
-  console.log(
-    `📍 Environment: ${
-      process.env.NODE_ENV || 'development'
-    }`
-  );
-});
+const server = app.listen(
+  PORT,
+  '0.0.0.0',
+  () => {
+    console.log(
+      `🚀 Server running on port ${PORT}`
+    );
+
+    console.log(
+      `📍 Environment: ${
+        process.env.NODE_ENV || 'development'
+      }`
+    );
+  }
+);
+
+// ================= MONGOOSE EVENTS =================
+mongoose.connection.on(
+  'connected',
+  () => {
+    console.log('✅ MongoDB Connected');
+  }
+);
+
+mongoose.connection.on(
+  'disconnected',
+  () => {
+    console.log('⚠️ MongoDB Disconnected');
+  }
+);
+
+mongoose.connection.on(
+  'error',
+  (err) => {
+    console.error(
+      '❌ MongoDB Error:',
+      err.message
+    );
+  }
+);
 
 // ================= SHUTDOWN =================
-const gracefulShutdown = async (signal) => {
-  console.log(`${signal} received. Closing server...`);
+const gracefulShutdown = async (
+  signal
+) => {
 
-  server.close(async () => {
-    try {
+  console.log(
+    `\n⚠️ ${signal} received. Starting graceful shutdown...`
+  );
+
+  try {
+
+    server.close(async () => {
+
+      console.log('🛑 HTTP server closed');
+
       await mongoose.connection.close();
-      console.log('MongoDB connection closed.');
+
+      console.log(
+        '✅ MongoDB connection closed'
+      );
+
       process.exit(0);
-    } catch (err) {
-      console.error('Shutdown error:', err);
-      process.exit(1);
-    }
-  });
+    });
+
+  } catch (error) {
+
+    console.error(
+      '❌ Shutdown Error:',
+      error
+    );
+
+    process.exit(1);
+  }
 };
 
-process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
-process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+process.on(
+  'SIGTERM',
+  () => gracefulShutdown('SIGTERM')
+);
 
-process.on('unhandledRejection', (err) => {
-  console.error('Unhandled Rejection:', err);
-});
+process.on(
+  'SIGINT',
+  () => gracefulShutdown('SIGINT')
+);
+
+// ================= UNHANDLED ERRORS =================
+process.on(
+  'unhandledRejection',
+  (reason) => {
+    console.error(
+      '❌ Unhandled Rejection:',
+      reason
+    );
+  }
+);
+
+process.on(
+  'uncaughtException',
+  (error) => {
+    console.error(
+      '❌ Uncaught Exception:',
+      error
+    );
+  }
+);
 
 module.exports = app;
