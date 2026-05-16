@@ -2,11 +2,8 @@ const Service = require('../models/Service');
 const cloudinaryService = require('../config/cloudinary');
 
 // ──────────────────────────────────────────────
-// getServices, getPopularServices, getServiceById,
-// getServiceBySlug, toggleServiceStatus,
-// deleteService – unchanged (kept as‑is)
+// getServices – modified to sort and place "Other Electronics" last
 // ──────────────────────────────────────────────
-
 const getServices = async (req, res) => {
   try {
     const { isActive, popular, featured } = req.query;
@@ -16,7 +13,16 @@ const getServices = async (req, res) => {
     if (popular === 'true') query.popular = true;
     if (featured === 'true') query.featured = true;
 
-    const services = await Service.find(query).sort('displayOrder');
+    let services = await Service.find(query).sort('displayOrder');
+
+    // Move "Other Electronics" to the end of the array
+    services = services.sort((a, b) => {
+      const aIsOther = a.name === 'Other Electronics';
+      const bIsOther = b.name === 'Other Electronics';
+      if (aIsOther && !bIsOther) return 1;
+      if (!aIsOther && bIsOther) return -1;
+      return 0;
+    });
 
     res.json({
       success: true,
@@ -83,7 +89,10 @@ const toggleServiceStatus = async (req, res) => {
     });
   } catch (error) {
     console.error('Toggle service status error:', error);
-    res.status(500).json({ success: false, message: error.message || 'Failed to toggle service status' });
+    res.status(500).json({
+      success: false,
+      message: error.message || 'Failed to toggle service status'
+    });
   }
 };
 
@@ -92,7 +101,7 @@ const deleteService = async (req, res) => {
     const service = await Service.findById(req.params.id);
     if (!service) return res.status(404).json({ success: false, message: 'Service not found' });
 
-    // Delete image from Cloudinary
+    // Delete image from Cloudinary if exists
     if (service.imageUrl) {
       const parts = service.imageUrl.split('/');
       const folderAndFile = parts.slice(-2).join('/');
@@ -104,19 +113,17 @@ const deleteService = async (req, res) => {
     res.json({ success: true, message: 'Service deleted successfully' });
   } catch (error) {
     console.error('Delete service error:', error);
-    res.status(500).json({ success: false, message: error.message || 'Failed to delete service' });
+    res.status(500).json({
+      success: false,
+      message: error.message || 'Failed to delete service'
+    });
   }
 };
-
-// ──────────────────────────────────────────────
-// createService & updateService – memory‑based
-// ──────────────────────────────────────────────
 
 const createService = async (req, res) => {
   try {
     const serviceData = { ...req.body };
 
-    // Upload from memory buffer (req.file.buffer) – NO disk storage
     if (req.file) {
       const result = await cloudinaryService.uploadBuffer(req.file.buffer, {
         folder: 'mondal-electronics/services',
@@ -147,10 +154,9 @@ const updateService = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Service not found' });
     }
 
-    let imageUrl = service.imageUrl; // keep existing
+    let imageUrl = service.imageUrl;
 
     if (req.file) {
-      // Delete old Cloudinary image if present
       if (service.imageUrl) {
         const parts = service.imageUrl.split('/');
         const folderAndFile = parts.slice(-2).join('/');
@@ -158,7 +164,6 @@ const updateService = async (req, res) => {
         await cloudinaryService.deleteImage(publicId);
       }
 
-      // Upload new image from buffer
       const result = await cloudinaryService.uploadBuffer(req.file.buffer, {
         folder: 'mondal-electronics/services',
       });

@@ -4,9 +4,7 @@ import { FaArrowRight, FaChevronLeft, FaChevronRight } from 'react-icons/fa'
 import serviceService from '../../services/serviceService'
 import ServiceCard from '../common/ServiceCard'
 
-// ───── SINGLE PLACE TO CHANGE BACKGROUND COLOUR ─────
-const BG_HEX = '#073bb4'   // change this to any hex you like (e.g., '#0b10ae', '#1e3a8a')
-// ────────────────────────────────────────────────────
+const BG_HEX = '#073bb4'
 
 const ServicesSection = () => {
   const [services, setServices] = useState([])
@@ -20,7 +18,13 @@ const ServicesSection = () => {
       try {
         const response = await serviceService.getAllServices({ isActive: true })
         if (response.success && response.data.length > 0) {
-          setServices(response.data)
+          // Sort: "Other Electronics" at the end
+          const sorted = [...response.data].sort((a, b) => {
+            if (a.name === 'Other Electronics') return 1
+            if (b.name === 'Other Electronics') return -1
+            return 0
+          })
+          setServices(sorted)
         } else {
           setServices([])
         }
@@ -34,19 +38,14 @@ const ServicesSection = () => {
     fetchServices()
   }, [])
 
-  // ── Dynamic active dot on scroll ──
   const handleScroll = useCallback(() => {
     const container = scrollContainerRef.current
     if (!container) return
-
     const children = container.children
     if (children.length === 0) return
-
     const scrollLeft = container.scrollLeft
-
     let newIndex = 0
     let minDiff = Infinity
-
     for (let i = 0; i < children.length; i++) {
       const child = children[i]
       const slideLeft = child.offsetLeft
@@ -56,7 +55,6 @@ const ServicesSection = () => {
         newIndex = i
       }
     }
-
     setActiveIndex(prev => (prev !== newIndex ? newIndex : prev))
   }, [])
 
@@ -76,23 +74,15 @@ const ServicesSection = () => {
     const slideWidth = slide.offsetWidth
     const gap = parseFloat(getComputedStyle(container).gap) || 12
     const scrollAmount = slideWidth + gap
-
-    container.scrollBy({
-      left: direction === 'left' ? -scrollAmount : scrollAmount,
-      behavior: 'smooth',
-    })
+    container.scrollBy({ left: direction === 'left' ? -scrollAmount : scrollAmount, behavior: 'smooth' })
   }
-
-  const displayCount = Math.min(services.length, 8)
 
   const goToSlide = (index) => {
     const container = scrollContainerRef.current
     if (!container || !container.children[index]) return
-    const targetLeft = container.children[index].offsetLeft
-    container.scrollTo({ left: targetLeft, behavior: 'smooth' })
+    container.scrollTo({ left: container.children[index].offsetLeft, behavior: 'smooth' })
   }
 
-  // ── Loading state ──
   if (loading) {
     return (
       <section className="py-12" style={{ backgroundColor: BG_HEX }}>
@@ -104,18 +94,12 @@ const ServicesSection = () => {
     )
   }
 
-  // ── Error state ──
   if (error) {
     return (
       <section className="py-12" style={{ backgroundColor: BG_HEX }}>
         <div className="container-custom text-center">
           <p className="text-red-500 text-sm">Error: {error}</p>
-          <button
-            onClick={() => window.location.reload()}
-            className="mt-2 text-blue-600 underline text-sm"
-          >
-            Retry
-          </button>
+          <button onClick={() => window.location.reload()} className="mt-2 text-blue-600 underline text-sm">Retry</button>
         </div>
       </section>
     )
@@ -123,31 +107,22 @@ const ServicesSection = () => {
 
   if (services.length === 0) return null
 
-  // ── Main section ──
+  // 🔥 NO SLICE – show ALL services
+  const totalSlides = services.length
+
   return (
-    <section
-      className="py-10 sm:py-14 overflow-hidden"
-      style={{ backgroundColor: BG_HEX }}
-    >
+    <section className="py-10 sm:py-14 overflow-hidden" style={{ backgroundColor: BG_HEX }}>
       <div className="container-custom">
-        {/* Header: left title, right View All */}
         <div className="flex items-end justify-between mb-6 sm:mb-8">
-          <h2 className="text-xl sm:text-2xl md:text-3xl font-extrabold text-white">
-            Our Services
-          </h2>
-          {services.length > 8 && (
-            <Link
-              to="/services"
-              className="inline-flex items-center gap-1.5 text-white hover:text-blue-700 font-semibold text-sm whitespace-nowrap transition-colors"
-            >
+          <h2 className="text-xl sm:text-2xl md:text-3xl font-extrabold text-white">Our Services</h2>
+          {totalSlides > 8 && (
+            <Link to="/services" className="inline-flex items-center gap-1.5 text-white hover:text-blue-700 font-semibold text-sm whitespace-nowrap transition-colors">
               View All <FaArrowRight className="text-xs" />
             </Link>
           )}
         </div>
 
-        {/* Slider wrapper */}
         <div className="relative">
-          {/* Left Arrow (desktop) */}
           <button
             onClick={() => scroll('left')}
             className="absolute left-0 top-1/2 -translate-y-1/2 z-10 hidden md:flex items-center justify-center w-9 h-9 bg-white rounded-full shadow-md border border-gray-200 text-gray-700 hover:text-blue-600 transition-colors"
@@ -156,13 +131,12 @@ const ServicesSection = () => {
             <FaChevronLeft className="text-sm" />
           </button>
 
-          {/* Scrollable cards */}
           <div
             ref={scrollContainerRef}
             className="flex gap-3 sm:gap-4 overflow-x-auto scroll-smooth snap-x snap-mandatory pb-4"
             style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
           >
-            {services.slice(0, 8).map((service) => (
+            {services.map((service) => (
               <div
                 key={service._id}
                 className="snap-start flex-shrink-0 w-[70vw] sm:w-[45vw] md:w-[30vw] lg:w-[22vw] xl:w-[20vw]"
@@ -172,7 +146,6 @@ const ServicesSection = () => {
             ))}
           </div>
 
-          {/* Right Arrow (desktop) */}
           <button
             onClick={() => scroll('right')}
             className="absolute right-0 top-1/2 -translate-y-1/2 z-10 hidden md:flex items-center justify-center w-9 h-9 bg-white rounded-full shadow-md border border-gray-200 text-gray-700 hover:text-blue-600 transition-colors"
@@ -182,9 +155,8 @@ const ServicesSection = () => {
           </button>
         </div>
 
-        {/* ── CIRCLE DOTS (dynamic active) ── */}
         <div className="flex justify-center gap-1.5 mt-4 sm:mt-5">
-          {Array.from({ length: displayCount }).map((_, i) => (
+          {Array.from({ length: totalSlides }).map((_, i) => (
             <button
               key={i}
               onClick={() => goToSlide(i)}
