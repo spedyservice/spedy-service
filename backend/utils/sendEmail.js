@@ -1,137 +1,124 @@
 const nodemailer = require('nodemailer');
-const dns = require('dns');
-
-// Force Node.js to prefer IPv4 for ALL DNS lookups globally
-dns.setDefaultResultOrder('ipv4first');
+const axios = require('axios');
 
 const ADMIN_EMAIL = 'spedyservice40@gmail.com';
 
+// Determine if we should use Brevo (production with API key) or nodemailer
+const USE_BREVO = process.env.NODE_ENV === 'production' && process.env.BREVO_API_KEY;
+
 class EmailService {
   constructor() {
-    this.transporter = null;
     this.isConfigured = false;
-    this.initTransporter();
+    if (USE_BREVO) {
+      this.initBrevo();
+    } else {
+      this.initNodemailer();
+    }
   }
 
-  initTransporter() {
-    const {
-      EMAIL_USER,
-      EMAIL_PASS,
-      EMAIL_HOST,
-      EMAIL_PORT,
-      EMAIL_FROM,
-    } = process.env;
-
-    console.log('📧 Email config check:', {
-      user: EMAIL_USER ? 'set' : 'missing',
-      pass: EMAIL_PASS ? 'set' : 'missing',
-      host: EMAIL_HOST || 'smtp.gmail.com',
-      port: EMAIL_PORT || '465',
-      from: EMAIL_FROM || `"Spedy Service <${EMAIL_USER}>"`,
-    });
+  // ---------- Nodemailer (Gmail) for development ----------
+  initNodemailer() {
+    const { EMAIL_USER, EMAIL_PASS } = process.env;
+    console.log('📧 Nodemailer config:', { user: EMAIL_USER ? 'set' : 'missing', pass: EMAIL_PASS ? 'set' : 'missing' });
 
     if (!EMAIL_USER || !EMAIL_PASS) {
-      console.warn(
-        '⚠️ Email credentials missing. Email sending disabled.'
-      );
+      console.warn('⚠️ Email credentials missing. Email sending disabled.');
       this.isConfigured = false;
       return;
     }
 
     try {
       this.transporter = nodemailer.createTransport({
-        host: EMAIL_HOST || 'smtp.gmail.com',
-        port: parseInt(EMAIL_PORT || '465'),
-        secure: true, // true for port 465 (SSL)
-
-        auth: {
-          user: EMAIL_USER,
-          pass: EMAIL_PASS,
-        },
-
-        // Force IPv4 at nodemailer level
-        family: 4,
-
-        tls: {
-          rejectUnauthorized: false,
-          // Force IPv4 at TLS level too
-          minVersion: 'TLSv1.2',
-        },
-
-        connectionTimeout: 20000,
-        greetingTimeout: 20000,
-        socketTimeout: 20000,
-
-        // Custom DNS resolver that only returns IPv4
-        dnsOptions: {
-          family: 4,
-        },
+        service: 'gmail',
+        auth: { user: EMAIL_USER, pass: EMAIL_PASS },
+        family: 4, // prefer IPv4
       });
-
       this.isConfigured = true;
-      console.log('✅ Email service configured successfully');
-
-      // Verify in background — don't block startup
-      this.verifyConnection();
+      console.log('✅ Nodemailer (Gmail) configured for development');
+      this.verifyNodemailer();
     } catch (err) {
-      console.error(
-        '❌ Failed to create email transporter:',
-        err.message
-      );
+      console.error('❌ Failed to create email transporter:', err.message);
       this.isConfigured = false;
     }
   }
 
-  async verifyConnection() {
-    if (!this.transporter) return false;
+  async verifyNodemailer() {
+    if (!this.transporter) return;
     try {
       await this.transporter.verify();
-      console.log('✅ Email transporter verified successfully');
-      return true;
+      console.log('✅ Nodemailer transporter verified');
     } catch (error) {
-      console.error(
-        '❌ Email transporter verification failed:',
-        error.message
-      );
-      // Don't set isConfigured = false here
-      // We still attempt sending even if verify fails
-      return false;
+      console.error('❌ Nodemailer verification failed:', error.message);
     }
   }
 
-  async sendEmail(options) {
-    if (!this.isConfigured || !this.transporter) {
-      console.error(
-        '❌ Email service not configured. Cannot send email to',
-        options.to
-      );
+  // ---------- Brevo API for production ----------
+  initBrevo() {
+    this.brevoApiKey = process.env.BREVO_API_KEY;
+    this.senderEmail = process.env.BREVO_SENDER_EMAIL || process.env.EMAIL_USER;
+    this.senderName = process.env.BREVO_SENDER_NAME || "Spedy Service";
+    this.isConfigured = true;
+    console.log('✅ Brevo email service configured for production');
+  }
+
+  async sendViaBrevo(to, subject, html) {
+    if (!this.brevoApiKey) {
+      console.error('❌ BREVO_API_KEY missing');
       return false;
     }
-
     try {
-      const mailOptions = {
-        from:
-          process.env.EMAIL_FROM ||
-          `"Spedy Service" <${process.env.EMAIL_USER}>`,
-        to: options.to,
-        subject: options.subject,
-        html: options.html,
-        text: options.text || undefined,
-      };
-
-      const info = await this.transporter.sendMail(mailOptions);
-      console.log(
-        `✅ Email sent to ${options.to}: ${info.messageId}`
+      const response = await axios.post(
+        'https://api.brevo.com/v3/smtp/email',
+        {
+          sender: { email: this.senderEmail, name: this.senderName },
+          to: [{ email: to }],
+          subject: subject,
+          htmlContent: html,
+        },
+        {
+          headers: {
+            'api-key': this.brevoApiKey,
+            'Content-Type': 'application/json',
+          },
+          timeout: 15000,
+        }
       );
+      console.log(`✅ Brevo email sent to ${to}: ${response.data.messageId}`);
       return true;
     } catch (error) {
-      console.error('❌ Email send error:', error.message);
+      console.error('❌ Brevo error:', error.response?.data || error.message);
       return false;
     }
   }
 
-  // -------------- Booking Emails --------------
+  // ---------- Unified send method ----------
+  async sendEmail(options) {
+    if (!this.isConfigured) {
+      console.error('❌ Email service not configured. Cannot send to', options.to);
+      return false;
+    }
+    if (USE_BREVO) {
+      return this.sendViaBrevo(options.to, options.subject, options.html);
+    } else {
+      // Nodemailer
+      try {
+        const mailOptions = {
+          from: `"Spedy Service" <${process.env.EMAIL_USER}>`,
+          to: options.to,
+          subject: options.subject,
+          html: options.html,
+        };
+        const info = await this.transporter.sendMail(mailOptions);
+        console.log(`✅ Nodemailer sent to ${options.to}: ${info.messageId}`);
+        return true;
+      } catch (err) {
+        console.error('❌ Nodemailer error:', err.message);
+        return false;
+      }
+    }
+  }
 
+  // ------------------------ All email methods (identical to your original, but calling this.sendEmail) ------------------------
   async sendBookingConfirmation(booking, customerEmail) {
     const html = `
       <!DOCTYPE html>
@@ -195,55 +182,28 @@ class EmailService {
       to: customerEmail,
       subject: `Booking Confirmation - ${booking.bookingId}`,
       html,
-    }).catch((err) =>
-      console.error('Email error (booking customer):', err.message)
-    );
+    }).catch(err => console.error('Email error (booking customer):', err.message));
 
     // Send copy to admin
-    const adminHtml = html.replace(
-      `Dear ${booking.customerName}`,
-      'Admin Notification'
-    );
+    const adminHtml = html.replace(`Dear ${booking.customerName}`, 'Admin Notification');
     this.sendEmail({
       to: ADMIN_EMAIL,
       subject: `New Booking: ${booking.bookingId} - ${booking.customerName}`,
       html: adminHtml,
-    }).catch((err) =>
-      console.error('Email error (booking admin):', err.message)
-    );
+    }).catch(err => console.error('Email error (booking admin):', err.message));
   }
 
-  async sendBookingStatusUpdate(
-    booking,
-    customerEmail,
-    oldStatus,
-    newStatus
-  ) {
+  async sendBookingStatusUpdate(booking, customerEmail, oldStatus, newStatus) {
     const statusMessages = {
-      confirmed:
-        'Your booking has been confirmed! A technician will be assigned soon.',
-      in_progress:
-        'Good news! Our technician is now working on your service request.',
-      completed:
-        'Your service has been completed successfully. Thank you for choosing us!',
+      confirmed: 'Your booking has been confirmed! A technician will be assigned soon.',
+      in_progress: 'Good news! Our technician is now working on your service request.',
+      completed: 'Your service has been completed successfully. Thank you for choosing us!',
       cancelled: 'Your booking has been cancelled as requested.',
-      rescheduled: `Your booking has been rescheduled to ${new Date(
-        booking.preferredDate
-      ).toLocaleDateString('en-IN')}`,
+      rescheduled: `Your booking has been rescheduled to ${new Date(booking.preferredDate).toLocaleDateString('en-IN')}`,
     };
-
-    const message =
-      statusMessages[newStatus] ||
-      `Your booking status has been updated to ${newStatus}.`;
-
-    const reviewLink = `${
-      process.env.FRONTEND_URL || 'https://spedy-service.vercel.app'
-    }/my-bookings`;
-
-    const reviewHtml =
-      newStatus === 'completed'
-        ? `<p>We'd love to hear your feedback! <a href="${reviewLink}" style="color: #2563eb; font-weight: bold;">Leave a Review</a></p>`
-        : '';
+    const message = statusMessages[newStatus] || `Your booking status has been updated to ${newStatus}.`;
+    const reviewLink = `${process.env.FRONTEND_URL || 'https://spedy-service.vercel.app'}/my-bookings`;
+    const reviewHtml = newStatus === 'completed' ? `<p>We'd love to hear your feedback! <a href="${reviewLink}" style="color: #2563eb; font-weight: bold;">Leave a Review</a></p>` : '';
 
     const html = `
       <!DOCTYPE html>
@@ -293,34 +253,24 @@ class EmailService {
       to: customerEmail,
       subject: `Booking Status Update - ${booking.bookingId}`,
       html,
-    }).catch((err) =>
-      console.error('Email error (booking status update):', err.message)
-    );
+    }).catch(err => console.error('Email error (booking status):', err.message));
   }
 
-  // -------------- Order Emails --------------
-
   async sendOrderConfirmation(order, customerEmail) {
-    const itemsHtml = order.items
-      .map(
-        (item) => `
+    const itemsHtml = order.items.map(item => `
       <tr>
         <td style="padding: 8px;">${item.name}</td>
         <td style="padding: 8px;">${item.quantity}</td>
         <td style="padding: 8px;">₹${item.price}</td>
         <td style="padding: 8px;">₹${item.price * item.quantity}</td>
       </tr>
-    `
-      )
-      .join('');
+    `).join('');
 
-    // Safe fallbacks to prevent NaN
     const taxPrice = order.taxPrice || 0;
     const discount = order.discount || 0;
     const totalPrice = order.totalPrice || 0;
     const subtotal = totalPrice - taxPrice + discount;
-    const customerName =
-      order.shippingAddress?.fullName || order.user?.name || 'Customer';
+    const customerName = order.shippingAddress?.fullName || order.user?.name || 'Customer';
 
     const html = `
       <!DOCTYPE html>
@@ -360,10 +310,7 @@ class EmailService {
               <div class="detail-row"><span class="detail-label">Payment:</span> ${order.paymentMethod}</div>
             </div>
             <h3>Items Ordered</h3>
-            <table>
-              <thead><tr><th>Product</th><th>Qty</th><th>Price</th><th>Subtotal</th></tr></thead>
-              <tbody>${itemsHtml}</tbody>
-            </table>
+            <table><thead><tr><th>Product</th><th>Qty</th><th>Price</th><th>Subtotal</th></tr></thead><tbody>${itemsHtml}</tbody></table>
             <div class="order-details" style="margin-top: 20px;">
               <div class="detail-row"><span class="detail-label">Subtotal:</span> ₹${subtotal}</div>
               <div class="detail-row"><span class="detail-label">Tax:</span> ₹${taxPrice}</div>
@@ -371,12 +318,7 @@ class EmailService {
               <div class="detail-row total-row"><span class="detail-label">Total:</span> ₹${totalPrice}</div>
             </div>
             <h3>Shipping Address</h3>
-            <p>
-              ${order.shippingAddress?.fullName || ''}<br/>
-              ${order.shippingAddress?.address || ''}<br/>
-              ${order.shippingAddress?.city || ''}, ${order.shippingAddress?.postalCode || ''}<br/>
-              ${order.shippingAddress?.phone || ''}
-            </p>
+            <p>${order.shippingAddress?.fullName || ''}<br/>${order.shippingAddress?.address || ''}<br/>${order.shippingAddress?.city || ''}, ${order.shippingAddress?.postalCode || ''}<br/>${order.shippingAddress?.phone || ''}</p>
             <p>If you have any questions, contact us at ${process.env.EMAIL_USER}</p>
           </div>
           <div class="footer">
@@ -387,35 +329,21 @@ class EmailService {
       </html>
     `;
 
-    // Send to customer
     this.sendEmail({
       to: customerEmail,
       subject: `Order Confirmed - ${order._id}`,
       html,
-    }).catch((err) =>
-      console.error('Email error (order customer):', err.message)
-    );
+    }).catch(err => console.error('Email error (order customer):', err.message));
 
-    // Send copy to admin
-    const adminHtml = html.replace(
-      `Dear ${customerName}`,
-      'Admin Notification'
-    );
+    const adminHtml = html.replace(`Dear ${customerName}`, 'Admin Notification');
     this.sendEmail({
       to: ADMIN_EMAIL,
       subject: `New Order: ${order._id} - ${customerName}`,
       html: adminHtml,
-    }).catch((err) =>
-      console.error('Email error (order admin):', err.message)
-    );
+    }).catch(err => console.error('Email error (order admin):', err.message));
   }
 
-  async sendOrderStatusUpdate(
-    order,
-    customerEmail,
-    oldStatus,
-    newStatus
-  ) {
+  async sendOrderStatusUpdate(order, customerEmail, oldStatus, newStatus) {
     const statusMessages = {
       Processing: 'Your order is now being processed.',
       Shipped: 'Your order has been shipped!',
@@ -423,13 +351,8 @@ class EmailService {
       Cancelled: 'Your order has been cancelled.',
       Returned: 'Your order has been returned.',
     };
-
-    const message =
-      statusMessages[newStatus] ||
-      `Your order status has been updated to ${newStatus}.`;
-
-    const customerName =
-      order.shippingAddress?.fullName || 'Customer';
+    const message = statusMessages[newStatus] || `Your order status has been updated to ${newStatus}.`;
+    const customerName = order.shippingAddress?.fullName || 'Customer';
 
     const html = `
       <!DOCTYPE html>
@@ -477,12 +400,8 @@ class EmailService {
       to: customerEmail,
       subject: `Order Status Update - ${order._id}`,
       html,
-    }).catch((err) =>
-      console.error('Email error (order status):', err.message)
-    );
+    }).catch(err => console.error('Email error (order status):', err.message));
   }
-
-  // -------------- Auth Emails --------------
 
   async sendWelcomeEmail(user) {
     const html = `
@@ -525,14 +444,7 @@ class EmailService {
       </body>
       </html>
     `;
-
-    this.sendEmail({
-      to: user.email,
-      subject: 'Welcome to Spedy Service!',
-      html,
-    }).catch((err) =>
-      console.error('Email error (welcome):', err.message)
-    );
+    this.sendEmail({ to: user.email, subject: 'Welcome to Spedy Service!', html }).catch(err => console.error('Email error (welcome):', err.message));
   }
 
   async sendPasswordResetEmail(user, resetCode) {
@@ -571,19 +483,11 @@ class EmailService {
       </body>
       </html>
     `;
-
-    this.sendEmail({
-      to: user.email,
-      subject: 'Your Password Reset Code',
-      html,
-    }).catch((err) =>
-      console.error('Email error (password reset):', err.message)
-    );
+    this.sendEmail({ to: user.email, subject: 'Your Password Reset Code', html }).catch(err => console.error('Email error (password reset):', err.message));
   }
 
   async sendVerificationEmail(user, verificationToken) {
     const verifyUrl = `${process.env.FRONTEND_URL}/verify-email?token=${verificationToken}`;
-
     const html = `
       <!DOCTYPE html>
       <html>
@@ -617,14 +521,7 @@ class EmailService {
       </body>
       </html>
     `;
-
-    this.sendEmail({
-      to: user.email,
-      subject: 'Verify Your Email Address',
-      html,
-    }).catch((err) =>
-      console.error('Email error (verification):', err.message)
-    );
+    this.sendEmail({ to: user.email, subject: 'Verify Your Email Address', html }).catch(err => console.error('Email error (verification):', err.message));
   }
 }
 
