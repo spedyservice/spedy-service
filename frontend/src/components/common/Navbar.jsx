@@ -81,7 +81,7 @@ const Navbar = () => {
   const [searchQuery, setSearchQuery] = useState('')
   const [scrollY, setScrollY] = useState(0)
   const [msgIndex, setMsgIndex] = useState(0)
-  const [showMobileSearch, setShowMobileSearch] = useState(false) // NEW: toggle mobile search input
+  const [showMobileSearch, setShowMobileSearch] = useState(false)
 
   // ---------- Cart count ----------
   const fetchCartCount = useCallback(async () => {
@@ -200,7 +200,6 @@ const Navbar = () => {
               >
                 {isOpen ? <FaTimes size={20} /> : <FaBars size={20} />}
               </button>
-              {/* NEW: Search icon button toggles mobile search input */}
               <button
                 onClick={() => setShowMobileSearch(!showMobileSearch)}
                 className="p-1.5 text-gray-700 hover:bg-gray-100 rounded-lg"
@@ -311,7 +310,6 @@ const Navbar = () => {
             </nav>
 
             <div className="flex items-center gap-3">
-              {/* Desktop search bar – ALWAYS VISIBLE */}
               <form onSubmit={handleSearch} className="flex items-center bg-gray-100 rounded-full px-3 py-2">
                 <FaSearch className="text-gray-400 text-xs mr-2" />
                 <input
@@ -371,7 +369,7 @@ const Navbar = () => {
           </div>
         </div>
 
-        {/* ═══════ Mobile search input (toggled by search icon) ═══════ */}
+        {/* Mobile search input */}
         <AnimatePresence>
           {showMobileSearch && (
             <motion.div
@@ -397,7 +395,7 @@ const Navbar = () => {
         </AnimatePresence>
       </div>
 
-      {/* ── MOBILE MENU ── */}
+      {/* ── MOBILE MENU (no gap) ── */}
       <AnimatePresence>
         {isOpen && (
           <motion.div
@@ -406,7 +404,7 @@ const Navbar = () => {
             exit={{ opacity: 0, x: '100%' }}
             transition={{ type: 'tween', duration: 0.3 }}
             className="fixed inset-0 z-40 bg-white overflow-y-auto lg:hidden"
-            style={{ top: showMobileSearch ? 'calc(7rem + 56px)' : 'calc(7rem + 48px)' }} // adjust based on search visibility
+            style={{ top: '84px' }}  // Fixed position: below the fixed navbar (top bar 28px + navbar 56px)
           >
             <div className="px-5 py-6">
               <div className="flex flex-col gap-1.5 mb-6">

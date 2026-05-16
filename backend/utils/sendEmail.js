@@ -10,39 +10,55 @@ class EmailService {
   }
 
   initTransporter() {
-    const { EMAIL_HOST, EMAIL_PORT, EMAIL_USER, EMAIL_PASS, EMAIL_FROM } = process.env;
+    const { EMAIL_USER, EMAIL_PASS, EMAIL_HOST, EMAIL_PORT, EMAIL_FROM } = process.env;
 
-    // Log configuration status (without exposing full password)
     console.log('📧 Email config check:', {
-      host: EMAIL_HOST || 'missing',
-      port: EMAIL_PORT || 'missing',
       user: EMAIL_USER ? 'set' : 'missing',
       pass: EMAIL_PASS ? 'set' : 'missing',
+      host: EMAIL_HOST || 'using gmail service',
+      port: EMAIL_PORT || 'default'
     });
 
-    if (EMAIL_USER && EMAIL_PASS && EMAIL_HOST) {
-      this.transporter = nodemailer.createTransport({
-        host: EMAIL_HOST,
-        port: parseInt(EMAIL_PORT || '587'),
-        secure: EMAIL_PORT === '465',
-        auth: {
-          user: EMAIL_USER,
-          pass: EMAIL_PASS,
-        },
-        tls: {
-          rejectUnauthorized: false
-        }
-      });
+    if (!EMAIL_USER || !EMAIL_PASS) {
+      console.warn('⚠️ Email credentials missing. Email sending disabled.');
+      this.isConfigured = false;
+      return;
+    }
+
+    try {
+      // Use Gmail service if no custom host provided (like your previous project)
+      if (!EMAIL_HOST || EMAIL_HOST === 'smtp.gmail.com') {
+        this.transporter = nodemailer.createTransport({
+          service: 'gmail',
+          auth: {
+            user: EMAIL_USER,
+            pass: EMAIL_PASS,
+          },
+        });
+      } else {
+        // Custom SMTP (if needed)
+        this.transporter = nodemailer.createTransport({
+          host: EMAIL_HOST,
+          port: parseInt(EMAIL_PORT || '587'),
+          secure: EMAIL_PORT === '465',
+          auth: {
+            user: EMAIL_USER,
+            pass: EMAIL_PASS,
+          },
+          tls: { rejectUnauthorized: false }
+        });
+      }
+
       this.isConfigured = true;
       console.log('✅ Email service configured successfully');
 
-      // Verify connection (asynchronously)
+      // Verify connection asynchronously (don't block startup)
       this.verifyConnection().catch(err => {
         console.error('❌ Email connection verification failed:', err.message);
-        this.isConfigured = false;
+        // Keep configured true anyway – we'll try to send
       });
-    } else {
-      console.warn('⚠️ Email credentials not provided. Email sending disabled.');
+    } catch (err) {
+      console.error('❌ Failed to create email transporter:', err.message);
       this.isConfigured = false;
     }
   }
@@ -62,7 +78,7 @@ class EmailService {
   async sendEmail(options) {
     if (!this.isConfigured) {
       console.error('❌ Email service not configured. Cannot send email to', options.to);
-      throw new Error('Email service not configured');
+      return false;
     }
 
     try {
@@ -79,12 +95,11 @@ class EmailService {
       return true;
     } catch (error) {
       console.error('❌ Email send error:', error.message);
-      throw error;
+      return false;
     }
   }
 
   // -------------- Booking Emails --------------
-
   async sendBookingConfirmation(booking, customerEmail) {
     const html = `
       <!DOCTYPE html>
@@ -147,19 +162,20 @@ class EmailService {
     `;
 
     try {
-      // Send to customer
-      await this.sendEmail({
+      // Send to customer (fire-and-forget – no await)
+      this.sendEmail({
         to: customerEmail,
         subject: `Booking Confirmation - ${booking.bookingId}`,
         html
-      });
+      }).catch(err => console.error('Background email error (customer):', err));
+      
       // Send copy to admin
       const adminHtml = html.replace('Dear ' + booking.customerName, 'Admin Notification');
-      await this.sendEmail({
+      this.sendEmail({
         to: ADMIN_EMAIL,
         subject: `New Booking: ${booking.bookingId} - ${booking.customerName}`,
         html: adminHtml
-      });
+      }).catch(err => console.error('Background email error (admin):', err));
     } catch (error) {
       console.error('Failed to send booking confirmation emails:', error);
     }
@@ -229,18 +245,17 @@ class EmailService {
     `;
 
     try {
-      await this.sendEmail({
+      this.sendEmail({
         to: customerEmail,
         subject: `Booking Status Update - ${booking.bookingId}`,
         html
-      });
+      }).catch(err => console.error('Background email error (status update):', err));
     } catch (error) {
       console.error('Failed to send booking status update email:', error);
     }
   }
 
   // -------------- Order Emails --------------
-
   async sendOrderConfirmation(order, customerEmail) {
     const itemsHtml = order.items.map(item => `
       <tr>
@@ -268,7 +283,7 @@ class EmailService {
           <div class="detail-row"><span class="detail-label">Order Date:</span> ${new Date(order.createdAt).toLocaleDateString('en-IN')}</div>
           <div class="detail-row"><span class="detail-label">Payment Method:</span> ${order.paymentMethod}</div></div>
           <h3>Items Ordered</h3>
-          <table><thead><tr><th>Product</th><th>Qty</th><th>Price</th><th>Subtotal</th></td></thead><tbody>${itemsHtml}</tbody></table>
+          <table><thead><tr><th>Product</th><th>Qty</th><th>Price</th><th>Subtotal</th></tr></thead><tbody>${itemsHtml}</tbody></table>
           <div class="order-details" style="margin-top:20px;">
           <div class="detail-row"><span class="detail-label">Subtotal:</span> ₹${order.totalPrice - order.taxPrice + order.discount}</div>
           <div class="detail-row"><span class="detail-label">Tax:</span> ₹${order.taxPrice}</div>
@@ -284,9 +299,11 @@ class EmailService {
     `;
 
     try {
-      await this.sendEmail({ to: customerEmail, subject: `Order Confirmed - ${order._id}`, html });
+      this.sendEmail({ to: customerEmail, subject: `Order Confirmed - ${order._id}`, html })
+        .catch(err => console.error('Background email error (order customer):', err));
       const adminHtml = html.replace('Dear ' + (order.shippingAddress?.fullName || order.user?.name), 'Admin Notification');
-      await this.sendEmail({ to: ADMIN_EMAIL, subject: `New Order: ${order._id} - ${order.shippingAddress?.fullName || order.user?.name}`, html: adminHtml });
+      this.sendEmail({ to: ADMIN_EMAIL, subject: `New Order: ${order._id} - ${order.shippingAddress?.fullName || order.user?.name}`, html: adminHtml })
+        .catch(err => console.error('Background email error (order admin):', err));
     } catch (error) {
       console.error('Failed to send order confirmation emails:', error);
     }
@@ -319,14 +336,14 @@ class EmailService {
       </html>
     `;
     try {
-      await this.sendEmail({ to: customerEmail, subject: `Order Status Update - ${order._id}`, html });
+      this.sendEmail({ to: customerEmail, subject: `Order Status Update - ${order._id}`, html })
+        .catch(err => console.error('Background email error (order status):', err));
     } catch (error) {
       console.error('Failed to send order status update email:', error);
     }
   }
 
   // -------------- Other emails --------------
-
   async sendWelcomeEmail(user) {
     const html = `
       <!DOCTYPE html>
@@ -369,7 +386,8 @@ class EmailService {
       </html>
     `;
     try {
-      await this.sendEmail({ to: user.email, subject: 'Welcome to Spedy Service!', html });
+      this.sendEmail({ to: user.email, subject: 'Welcome to Spedy Service!', html })
+        .catch(err => console.error('Background email error (welcome):', err));
     } catch (error) {
       console.error('Failed to send welcome email:', error);
     }
@@ -412,7 +430,8 @@ class EmailService {
       </html>
     `;
     try {
-      await this.sendEmail({ to: user.email, subject: 'Your Password Reset Code', html });
+      this.sendEmail({ to: user.email, subject: 'Your Password Reset Code', html })
+        .catch(err => console.error('Background email error (password reset):', err));
     } catch (error) {
       console.error('Failed to send password reset email:', error);
     }
@@ -448,7 +467,8 @@ class EmailService {
       </html>
     `;
     try {
-      await this.sendEmail({ to: user.email, subject: 'Verify Your Email Address', html });
+      this.sendEmail({ to: user.email, subject: 'Verify Your Email Address', html })
+        .catch(err => console.error('Background email error (verification):', err));
     } catch (error) {
       console.error('Failed to send verification email:', error);
     }

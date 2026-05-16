@@ -6,7 +6,7 @@ import AdminLayout from './components/common/AdminLayout';
 import ProtectedRoute from './components/common/ProtectedRoute';
 import AdminRoute from './components/common/AdminRoute';
 
-// Lazy load page components for code splitting (except MyBookingsPage)
+// Lazy load most pages
 const HomePage = lazy(() => import('./pages/HomePage'));
 const ServicesPage = lazy(() => import('./pages/ServicesPage'));
 const BookNowPage = lazy(() => import('./pages/BookNowPage'));
@@ -16,8 +16,6 @@ const RegisterPage = lazy(() => import('./pages/RegisterPage'));
 const ForgotPasswordPage = lazy(() => import('./pages/ForgotPasswordPage'));
 const ResetPasswordPage = lazy(() => import('./pages/ResetPasswordPage'));
 const AuthCallbackPage = lazy(() => import('./pages/AuthCallbackPage'));
-// MyBookingsPage is imported normally to avoid dynamic chunk missing
-import MyBookingsPage from './pages/MyBookingsPage';
 const BookingDetailPage = lazy(() => import('./pages/BookingDetailPage'));
 const ProfilePage = lazy(() => import('./pages/ProfilePage'));
 const ShopPage = lazy(() => import('./pages/ShopPage'));
@@ -25,9 +23,12 @@ const ProductDetailPage = lazy(() => import('./pages/ProductDetailPage'));
 const CartPage = lazy(() => import('./pages/CartPage'));
 const CheckoutPage = lazy(() => import('./pages/CheckoutPage'));
 const OrderConfirmationPage = lazy(() => import('./pages/OrderConfirmationPage'));
-const MyOrdersPage = lazy(() => import('./pages/MyOrdersPage'));
 
-// Admin pages
+// Import these normally to avoid dynamic chunk errors
+import MyBookingsPage from './pages/MyBookingsPage';
+import MyOrdersPage from './pages/MyOrdersPage';
+
+// Admin pages (lazy)
 const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard'));
 const AdminBookings = lazy(() => import('./pages/admin/AdminBookings'));
 const AdminServices = lazy(() => import('./pages/admin/AdminServices'));
@@ -77,8 +78,7 @@ function App() {
     location.pathname === '/contact' ||
     location.pathname === '/my-bookings' ||
     location.pathname === '/forgot-password' ||
-    location.pathname === '/reset-password' ||
-    location.pathname === '/my-orders';
+    location.pathname === '/reset-password';
 
   useEffect(() => {
     window.scrollTo(0, 0);
