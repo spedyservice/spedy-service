@@ -11,6 +11,8 @@ import {
 } from 'react-icons/fa'
 import { motion, AnimatePresence } from 'framer-motion'
 import cartService from '../../services/cartService'
+// ✅ Import your logo
+import logo from '../../assets/website logo.png'
 
 // ── Extracted UserDropdown (stable component reference) ──
 const UserDropdown = ({ user, isAdmin, onLogout, onClose }) => {
@@ -153,7 +155,7 @@ const Navbar = () => {
   const navLinks = [
     { to: '/', label: 'Home' },
     { to: '/services', label: 'Services' },
-    { to: '/shop', label: 'Sells' },      // renamed
+    { to: '/shop', label: 'Sells' },
     { to: '/book-now', label: 'Book Now' },
     { to: '/contact', label: 'Contact' },
   ]
@@ -209,13 +211,14 @@ const Navbar = () => {
               </button>
             </div>
 
-            <div className="flex-1 flex justify-center">
-              <Link to="/">
-                <h1 className="text-lg font-extrabold tracking-tight text-gray-900">
-                  Spedy <span className="text-blue-900">Service</span>
-                </h1>
-              </Link>
-            </div>
+            {/* Logo on mobile */}
+            <Link to="/" className="flex-1 flex justify-center">
+              <img
+                src={logo}
+                alt="Spedy Service"
+                className="h-8 w-auto object-contain"
+              />
+            </Link>
 
             <div className="flex items-center justify-end gap-2">
               {isAuthenticated ? (
@@ -261,10 +264,13 @@ const Navbar = () => {
 
           {/* ═══════ Desktop layout ═══════ */}
           <div className="hidden lg:flex items-center justify-between py-3 sm:py-4">
-            <Link to="/" className="flex-shrink-0 flex items-center">
-              <h1 className="text-lg sm:text-xl font-extrabold tracking-tight text-gray-900">
-                Spedy <span className="text-blue-900">Service</span>
-              </h1>
+            {/* Logo on desktop */}
+            <Link to="/" className="flex-shrink-0">
+              <img
+                src={logo}
+                alt="Spedy Service"
+                className="h-10 w-auto object-contain"
+              />
             </Link>
 
             <nav className="flex items-center gap-6">
