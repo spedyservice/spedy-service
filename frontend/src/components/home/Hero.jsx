@@ -1,18 +1,17 @@
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { Link } from 'react-router-dom'
-import { FaChevronLeft, FaChevronRight, FaSpinner } from 'react-icons/fa'
+import { FaChevronLeft, FaChevronRight, FaSpinner, FaSyncAlt } from 'react-icons/fa'
 import bannerService from '../../services/bannerService'
 
 const Hero = () => {
   const [banners, setBanners] = useState([])
   const [currentSlide, setCurrentSlide] = useState(0)
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
   const [isMobile, setIsMobile] = useState(false)
-
-  // Store the currently displayed image (prevents flicker while new one loads)
   const [displayedImage, setDisplayedImage] = useState(null)
-  // Ref to hold the Image() object for preloading
   const preloadRef = useRef(null)
+  const fetchAttempts = useRef(0)
 
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 768)
@@ -21,35 +20,44 @@ const Hero = () => {
     return () => window.removeEventListener('resize', check)
   }, [])
 
-  useEffect(() => {
-    const fetchBanners = async () => {
-      try {
-        const response = await bannerService.getBanners()
-        if (response.success && response.data.length > 0) {
-          setBanners(response.data)
-          // Set the initial displayed image
-          const first = response.data[0]
-          const img = isMobile && first.mobileImage ? first.mobileImage : first.desktopImage
-          setDisplayedImage(img)
-        }
-      } catch (error) {
-        console.error('Error fetching banners:', error)
-      } finally {
-        setLoading(false)
+  const fetchBanners = useCallback(async (retry = false) => {
+    setError(null)
+    if (!retry) setLoading(true)
+    try {
+      const response = await bannerService.getBanners()
+      if (response.success && response.data.length > 0) {
+        setBanners(response.data)
+        const first = response.data[0]
+        const img = isMobile && first.mobileImage ? first.mobileImage : first.desktopImage
+        setDisplayedImage(img)
+        fetchAttempts.current = 0
+      } else {
+        throw new Error('No banners available')
       }
+    } catch (err) {
+      console.error('Error fetching banners:', err)
+      setError(err.message || 'Failed to load banners')
+      // Auto‑retry once after 3 seconds
+      if (fetchAttempts.current === 0) {
+        fetchAttempts.current = 1
+        setTimeout(() => fetchBanners(true), 3000)
+      }
+    } finally {
+      setLoading(false)
     }
-    fetchBanners()
-  }, [])
+  }, [isMobile])
 
-  // Preload the image for the current slide and then update displayedImage
+  useEffect(() => {
+    fetchBanners()
+  }, [fetchBanners])
+
+  // Preload the image for the current slide
   useEffect(() => {
     if (banners.length === 0) return
     const current = banners[currentSlide]
     const nextImage = isMobile && current.mobileImage ? current.mobileImage : current.desktopImage
-    // If the image hasn't changed, skip
     if (displayedImage === nextImage) return
 
-    // Preload the new image
     const img = new Image()
     img.src = nextImage
     preloadRef.current = img
@@ -59,12 +67,10 @@ const Hero = () => {
       preloadRef.current = null
     }
     img.onerror = () => {
-      // Fallback: still set it even on error to avoid stuck state
       setDisplayedImage(nextImage)
       preloadRef.current = null
     }
 
-    // Cleanup if component unmounts or slide changes quickly
     return () => {
       if (preloadRef.current) {
         preloadRef.current.onload = null
@@ -74,6 +80,7 @@ const Hero = () => {
     }
   }, [currentSlide, banners, isMobile, displayedImage])
 
+  // Auto‑slide
   useEffect(() => {
     if (banners.length <= 1) return
     const id = setInterval(() => setCurrentSlide((prev) => (prev + 1) % banners.length), 5000)
@@ -86,11 +93,28 @@ const Hero = () => {
 
   if (loading) {
     return (
-      // ✅ Increased top padding to clear navbar, minimal bottom padding
       <section className="pt-[72px] md:pt-[80px] pb-2">
         <div className="max-w-[1260px] mx-auto px-4 sm:px-6">
           <div className="rounded-xl bg-gray-200 animate-pulse h-[250px] sm:h-[400px] flex items-center justify-center">
             <FaSpinner className="animate-spin w-10 h-10 text-blue-600" />
+          </div>
+        </div>
+      </section>
+    )
+  }
+
+  if (error) {
+    return (
+      <section className="pt-[72px] md:pt-[80px] pb-2">
+        <div className="max-w-[1260px] mx-auto px-4 sm:px-6">
+          <div className="rounded-xl bg-gray-100 h-[250px] sm:h-[400px] flex flex-col items-center justify-center gap-4">
+            <p className="text-red-600 text-sm">⚠️ {error}</p>
+            <button
+              onClick={() => fetchBanners(true)}
+              className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
+            >
+              <FaSyncAlt /> Retry
+            </button>
           </div>
         </div>
       </section>
@@ -106,7 +130,6 @@ const Hero = () => {
     <section className="pt-[45px] md:pt-[50px] pb-2">
       <div className="max-w-[1260px] mx-auto px-4 sm:px-6">
         <div className="relative rounded-xl overflow-hidden shadow-lg">
-          {/* Image container with crossfade effect */}
           <div className="relative w-full" style={{ minHeight: '250px', maxHeight: '500px' }}>
             {displayedImage && (
               <img
@@ -118,7 +141,6 @@ const Hero = () => {
             )}
           </div>
 
-          {/* Gradient overlay and button */}
           {showButton && (
             <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent pointer-events-none" />
           )}
@@ -133,7 +155,6 @@ const Hero = () => {
             </div>
           )}
 
-          {/* Navigation Arrows */}
           {banners.length > 1 && (
             <>
               <button
@@ -151,7 +172,6 @@ const Hero = () => {
             </>
           )}
 
-          {/* Dots */}
           {banners.length > 1 && (
             <div className="absolute bottom-14 md:bottom-16 left-0 right-0 flex justify-center gap-2 z-20">
               {banners.map((_, i) => (
