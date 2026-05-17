@@ -90,7 +90,7 @@ const ProductCategorySection = () => {
   if (loading || categories.length === 0) return null
 
   return (
-    <section className="bg-white pt-14 pb-2">
+    <section className="bg-white pt-14 pb-8"> {/* ✅ Increased bottom padding from pb-2 to pb-8 */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
         <div
           ref={scrollContainerRef}

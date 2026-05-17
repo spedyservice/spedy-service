@@ -149,10 +149,11 @@ const Navbar = () => {
     }
   }
 
+  // ✅ Changed "Shop" to "Sells" in navigation links
   const navLinks = [
     { to: '/', label: 'Home' },
     { to: '/services', label: 'Services' },
-    { to: '/shop', label: 'Shop' },
+    { to: '/shop', label: 'Sells' },      // renamed
     { to: '/book-now', label: 'Book Now' },
     { to: '/contact', label: 'Contact' },
   ]
@@ -404,7 +405,7 @@ const Navbar = () => {
             exit={{ opacity: 0, x: '100%' }}
             transition={{ type: 'tween', duration: 0.3 }}
             className="fixed inset-0 z-40 bg-white overflow-y-auto lg:hidden"
-            style={{ top: '84px' }}  // Fixed position: below the fixed navbar (top bar 28px + navbar 56px)
+            style={{ top: '84px' }}
           >
             <div className="px-5 py-6">
               <div className="flex flex-col gap-1.5 mb-6">

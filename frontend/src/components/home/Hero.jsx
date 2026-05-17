@@ -86,7 +86,8 @@ const Hero = () => {
 
   if (loading) {
     return (
-      <section className="pt-6 pb-6 md:pb-10">
+      // ✅ Increased top padding to clear navbar, minimal bottom padding
+      <section className="pt-[72px] md:pt-[80px] pb-2">
         <div className="max-w-[1260px] mx-auto px-4 sm:px-6">
           <div className="rounded-xl bg-gray-200 animate-pulse h-[250px] sm:h-[400px] flex items-center justify-center">
             <FaSpinner className="animate-spin w-10 h-10 text-blue-600" />
@@ -102,7 +103,7 @@ const Hero = () => {
   const showButton = current.buttonText && current.buttonText.trim().length > 0
 
   return (
-    <section className="pt-6 pb-6 md:pb-10">
+    <section className="pt-[45px] md:pt-[50px] pb-2">
       <div className="max-w-[1260px] mx-auto px-4 sm:px-6">
         <div className="relative rounded-xl overflow-hidden shadow-lg">
           {/* Image container with crossfade effect */}
@@ -115,7 +116,6 @@ const Hero = () => {
                 style={{ minHeight: '250px', maxHeight: '500px', opacity: 1 }}
               />
             )}
-            {/* A duplicate low-opacity image is not needed because we only swap when preloaded, but for a real crossfade we could stack two. Since we preload before swapping, there is no blank frame. */}
           </div>
 
           {/* Gradient overlay and button */}

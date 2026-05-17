@@ -20,10 +20,10 @@ const ImageServicesSection = () => {
     <section className="py-6 md:py-10 bg-[#ece9cb] px-4 sm:px-6">
       <div className="max-w-[1100px] mx-auto">
 
-        {/* ── HEADER (mobile & desktop): left title, right View All button ── */}
+        {/* HEADER */}
         <div className="flex items-center justify-between mb-5 md:mb-10">
           <h2 className="text-xl md:text-3xl lg:text-4xl font-extrabold text-gray-900">
-            Our Services
+            Our Best Services
           </h2>
           <Link
             to="/services"
@@ -33,7 +33,7 @@ const ImageServicesSection = () => {
           </Link>
         </div>
 
-        {/* ── MOBILE asymmetric cards ── */}
+        {/* ── MOBILE asymmetric cards with Book Now button ── */}
         <div className="md:hidden space-y-3">
           <div className="flex gap-3">
             <motion.div
@@ -41,12 +41,16 @@ const ImageServicesSection = () => {
               style={{ width: '65%' }}
               variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true }}
             >
-              <Link to="/book-now" className="flex flex-col h-full">
-                <h3 className="text-[15px] font-bold text-gray-900 mb-1.5 leading-tight">Washing Machine Repair</h3>
-                <div className="rounded-xl overflow-hidden mt-auto">
-                  <img src={wmImg} alt="Washing Machine Repair" className="w-full h-28 object-cover" />
-                </div>
-              </Link>
+              <h3 className="text-[15px] font-bold text-gray-900 mb-1.5 leading-tight">Washing Machine Repair</h3>
+              <div className="rounded-xl overflow-hidden mt-auto mb-2">
+                <img src={wmImg} alt="Washing Machine Repair" className="w-full h-28 object-cover" />
+              </div>
+              <button
+                onClick={() => navigate('/book-now')}
+                className="mt-2 w-full bg-blue-600 text-white py-1.5 rounded-lg text-xs font-semibold hover:bg-blue-700 transition shadow-sm"
+              >
+                Book Now →
+              </button>
             </motion.div>
 
             <motion.div
@@ -54,12 +58,16 @@ const ImageServicesSection = () => {
               style={{ width: '35%' }}
               variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true }}
             >
-              <Link to="/book-now" className="flex flex-col h-full">
-                <h3 className="text-[15px] font-bold text-gray-900 mb-1.5 leading-tight">Refrigerator Repair</h3>
-                <div className="rounded-xl overflow-hidden mt-auto">
-                  <img src={fridgeImg} alt="Refrigerator Repair" className="w-full h-28 object-cover" />
-                </div>
-              </Link>
+              <h3 className="text-[15px] font-bold text-gray-900 mb-1.5 leading-tight">Refrigerator Repair</h3>
+              <div className="rounded-xl overflow-hidden mt-auto mb-2">
+                <img src={fridgeImg} alt="Refrigerator Repair" className="w-full h-28 object-cover" />
+              </div>
+              <button
+                onClick={() => navigate('/book-now')}
+                className="mt-2 w-full bg-blue-600 text-white py-1.5 rounded-lg text-xs font-semibold hover:bg-blue-700 transition shadow-sm"
+              >
+                Book Now →
+              </button>
             </motion.div>
           </div>
 
@@ -69,12 +77,16 @@ const ImageServicesSection = () => {
               style={{ width: '35%' }}
               variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true }}
             >
-              <Link to="/book-now" className="flex flex-col h-full">
-                <h3 className="text-[15px] font-bold text-gray-900 mb-1.5 leading-tight">TV Repair</h3>
-                <div className="rounded-xl overflow-hidden mt-auto">
-                  <img src={tvImg} alt="TV Repair" className="w-full h-28 object-cover" />
-                </div>
-              </Link>
+              <h3 className="text-[15px] font-bold text-gray-900 mb-1.5 leading-tight">TV Repair</h3>
+              <div className="rounded-xl overflow-hidden mt-auto mb-2">
+                <img src={tvImg} alt="TV Repair" className="w-full h-28 object-cover" />
+              </div>
+              <button
+                onClick={() => navigate('/book-now')}
+                className="mt-2 w-full bg-blue-600 text-white py-1.5 rounded-lg text-xs font-semibold hover:bg-blue-700 transition shadow-sm"
+              >
+                Book Now →
+              </button>
             </motion.div>
 
             <motion.div
@@ -82,22 +94,24 @@ const ImageServicesSection = () => {
               style={{ width: '65%' }}
               variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true }}
             >
-              <Link to="/book-now" className="flex flex-col h-full">
-                <h3 className="text-[15px] font-bold text-gray-900 mb-1.5 leading-tight">AC Repair</h3>
-                <div className="rounded-xl overflow-hidden mt-auto">
-                  <img src={acImg} alt="AC Repair" className="w-full h-28 object-cover" />
-                </div>
-              </Link>
+              <h3 className="text-[15px] font-bold text-gray-900 mb-1.5 leading-tight">AC Repair</h3>
+              <div className="rounded-xl overflow-hidden mt-auto mb-2">
+                <img src={acImg} alt="AC Repair" className="w-full h-28 object-cover" />
+              </div>
+              <button
+                onClick={() => navigate('/book-now')}
+                className="mt-2 w-full bg-blue-600 text-white py-1.5 rounded-lg text-xs font-semibold hover:bg-blue-700 transition shadow-sm"
+              >
+                Book Now →
+              </button>
             </motion.div>
           </div>
-          {/* No separate bottom View All button anymore – it's at the top */}
         </div>
 
-        {/* ── DESKTOP asymmetric layout ── */}
+        {/* ── DESKTOP cards with Book Now button ── */}
         <div className="hidden md:block">
           <div className="grid grid-cols-2 gap-6 mb-6">
             <motion.div
-              onClick={() => navigate('/book-now')}
               className={`${cardHover} cursor-pointer bg-white rounded-[28px] shadow-[0_10px_30px_rgba(0,0,0,0.06)] border border-gray-100 p-6 flex flex-col`}
               variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true }}
             >
@@ -106,10 +120,15 @@ const ImageServicesSection = () => {
               <div className="rounded-2xl overflow-hidden mt-auto">
                 <img src={wmImg} alt="Washing Machine Repair" className="w-full h-44 object-cover hover:scale-105 transition-transform duration-300" />
               </div>
+              <button
+                onClick={() => navigate('/book-now')}
+                className="mt-4 w-full bg-blue-600 text-white py-2 rounded-xl text-sm font-semibold hover:bg-blue-700 transition shadow-md"
+              >
+                Book Now →
+              </button>
             </motion.div>
 
             <motion.div
-              onClick={() => navigate('/book-now')}
               className={`${cardHover} cursor-pointer bg-white rounded-[28px] shadow-[0_10px_30px_rgba(0,0,0,0.06)] border border-gray-100 p-6 flex flex-col relative`}
               variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true }}
             >
@@ -126,13 +145,17 @@ const ImageServicesSection = () => {
               <div className="rounded-2xl overflow-hidden mt-auto">
                 <img src={fridgeImg} alt="Refrigerator Repair" className="w-full h-44 object-cover hover:scale-105 transition-transform duration-300" />
               </div>
+              <button
+                onClick={() => navigate('/book-now')}
+                className="mt-4 w-full bg-blue-600 text-white py-2 rounded-xl text-sm font-semibold hover:bg-blue-700 transition shadow-md"
+              >
+                Book Now →
+              </button>
             </motion.div>
           </div>
 
           <div className="grid grid-cols-[2fr_1fr] gap-6">
-            {/* TV Repair */}
             <motion.div
-              onClick={() => navigate('/book-now')}
               className={`${cardHover} cursor-pointer bg-white rounded-[28px] shadow-[0_10px_30px_rgba(0,0,0,0.06)] border border-gray-100 p-6 flex flex-col`}
               variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true }}
             >
@@ -141,11 +164,15 @@ const ImageServicesSection = () => {
               <div className="rounded-2xl overflow-hidden">
                 <img src={tvImg} alt="TV Repair" className="w-full h-48 object-cover hover:scale-105 transition-transform duration-300" />
               </div>
+              <button
+                onClick={() => navigate('/book-now')}
+                className="mt-4 w-full bg-blue-600 text-white py-2 rounded-xl text-sm font-semibold hover:bg-blue-700 transition shadow-md"
+              >
+                Book Now →
+              </button>
             </motion.div>
 
-            {/* AC Repair */}
             <motion.div
-              onClick={() => navigate('/book-now')}
               className={`${cardHover} cursor-pointer bg-white rounded-[28px] shadow-[0_10px_30px_rgba(0,0,0,0.06)] border border-gray-100 p-6 flex flex-col`}
               variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true }}
             >
@@ -154,6 +181,12 @@ const ImageServicesSection = () => {
               <div className="rounded-2xl overflow-hidden mt-auto">
                 <img src={acImg} alt="AC Repair" className="w-full h-44 object-cover hover:scale-105 transition-transform duration-300" />
               </div>
+              <button
+                onClick={() => navigate('/book-now')}
+                className="mt-4 w-full bg-blue-600 text-white py-2 rounded-xl text-sm font-semibold hover:bg-blue-700 transition shadow-md"
+              >
+                Book Now →
+              </button>
             </motion.div>
           </div>
         </div>
