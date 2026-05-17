@@ -3,8 +3,10 @@ import { Link } from 'react-router-dom'
 import {
   FaPhone, FaEnvelope, FaMapMarkerAlt, FaClock,
   FaFacebookF, FaInstagram, FaTwitter, FaYoutube,
-  FaArrowRight, FaBolt
+  FaArrowRight
 } from 'react-icons/fa'
+// ✅ Import your logo
+import logo from '../../assets/website logo.png'
 
 const Footer = () => {
   const currentYear = new Date().getFullYear()
@@ -16,18 +18,14 @@ const Footer = () => {
         {/* Main grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 md:gap-12">
 
-          {/* ── Brand column ── */}
+          {/* ── Brand column with logo ── */}
           <div>
-            <Link to="/" className="flex items-center gap-3 mb-5">
-              <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-600/20">
-                <FaBolt className="text-white text-xl" />
-              </div>
-              <div>
-                <h2 className="text-xl font-extrabold tracking-tight text-white">
-                  Spedy <span className="text-blue-400">Service</span>
-                </h2>
-                <p className="text-xs text-gray-400 mt-0.5">Repair &amp; Sales Center</p>
-              </div>
+            <Link to="/" className="block mb-5">
+              <img
+                src={logo}
+                alt="Spedy Service"
+                className="h-10 md:h-12 w-auto object-contain"
+              />
             </Link>
             <p className="text-gray-400 text-sm leading-relaxed mb-6 max-w-xs">
               Your trusted partner for fast, reliable appliance repair and genuine products. Expert technicians, original parts, and free delivery on all orders.
@@ -58,7 +56,7 @@ const Footer = () => {
               {[
                 { to: '/', label: 'Home' },
                 { to: '/services', label: 'Services' },
-                { to: '/shop', label: 'Shop' },
+                { to: '/shop', label: 'Sells' },
                 { to: '/book-now', label: 'Book Now' },
                 { to: '/contact', label: 'Contact' },
                 { to: '/my-bookings', label: 'My Bookings' },
