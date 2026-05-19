@@ -6,12 +6,10 @@ import {
 } from 'react-icons/fa'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts'
 import adminService from '../../services/adminService'
-import bookingService from '../../services/bookingService'
 import toast from 'react-hot-toast'
 
 const AdminDashboard = () => {
   const [stats, setStats] = useState(null)
-  const [bookingStats, setBookingStats] = useState(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -21,12 +19,8 @@ const AdminDashboard = () => {
   const fetchDashboardData = async () => {
     setLoading(true)
     try {
-      const [dashboardRes, bookingStatsRes] = await Promise.all([
-        adminService.getDashboardOverview(),
-        bookingService.getBookingStats()
-      ])
+      const dashboardRes = await adminService.getDashboardOverview()
       setStats(dashboardRes.data)
-      setBookingStats(bookingStatsRes.data)
     } catch (error) {
       console.error('Error fetching dashboard data:', error)
       toast.error('Failed to load dashboard data')
@@ -35,7 +29,6 @@ const AdminDashboard = () => {
     }
   }
 
-  // Service stats (top row)
   const serviceStats = [
     { title: 'Total Bookings', value: stats?.stats?.totalBookings || 0, icon: FaCalendarAlt, bg: 'bg-blue-500', change: '+12%' },
     { title: 'Total Customers', value: stats?.stats?.totalCustomers || 0, icon: FaUsers, bg: 'bg-green-500', change: '+8%' },
@@ -43,7 +36,6 @@ const AdminDashboard = () => {
     { title: 'Active Services', value: stats?.stats?.totalServices || 0, icon: FaWrench, bg: 'bg-purple-500', change: '+5%' },
   ]
 
-  // Sales stats (second row)
   const salesStats = [
     { title: 'Total Products', value: stats?.stats?.totalProducts || 0, icon: FaBox, bg: 'bg-teal-500', change: '+10%' },
     { title: 'Categories', value: stats?.stats?.totalCategories || 0, icon: FaList, bg: 'bg-cyan-500', change: '+3%' },
@@ -59,7 +51,6 @@ const AdminDashboard = () => {
     { name: 'Cancelled', value: stats.bookingStatus.cancelled, color: '#ef4444' }
   ] : []
 
-  // Conditional rendering for charts – prevent rendering with empty data
   const monthlyData = stats?.monthlyStats || []
   const hasMonthlyData = monthlyData.length > 0
   const hasBookingStatusData = bookingStatusData.length > 0 && bookingStatusData.some(item => item.value > 0)
@@ -83,13 +74,11 @@ const AdminDashboard = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
-          {/* Header */}
           <div className="mb-6 md:mb-8">
             <h1 className="text-2xl md:text-3xl font-bold text-gray-800">Admin Dashboard</h1>
             <p className="text-gray-500 text-sm mt-1">Welcome back! Here's what's happening with your business today.</p>
           </div>
 
-          {/* ---- Service Stats ---- */}
           <h2 className="text-lg font-bold text-gray-700 mb-3">Service Stats</h2>
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-8">
             {serviceStats.map((card, index) => (
@@ -114,7 +103,6 @@ const AdminDashboard = () => {
             ))}
           </div>
 
-          {/* ---- Sales Stats ---- */}
           <h2 className="text-lg font-bold text-gray-700 mb-3">Sales Stats</h2>
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-8">
             {salesStats.map((card, index) => (
@@ -139,12 +127,10 @@ const AdminDashboard = () => {
             ))}
           </div>
 
-          {/* Charts – stacked on mobile, side-by-side on desktop */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-            {/* Monthly Bookings */}
             <div className="bg-white rounded-2xl shadow-sm p-4 md:p-5">
               <h3 className="font-semibold text-gray-700 mb-4">Monthly Bookings</h3>
-              <div className="h-60 sm:h-72">
+              <div className="h-60 sm:h-72 w-full">
                 {hasMonthlyData ? (
                   <ResponsiveContainer width="100%" height="100%">
                     <LineChart data={monthlyData}>
@@ -161,10 +147,9 @@ const AdminDashboard = () => {
               </div>
             </div>
 
-            {/* Status Distribution */}
             <div className="bg-white rounded-2xl shadow-sm p-4 md:p-5">
               <h3 className="font-semibold text-gray-700 mb-4">Booking Status Distribution</h3>
-              <div className="h-60 sm:h-72">
+              <div className="h-60 sm:h-72 w-full">
                 {hasBookingStatusData ? (
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
@@ -201,7 +186,6 @@ const AdminDashboard = () => {
             </div>
           </div>
 
-          {/* Quick Links */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">
             {[
               { href: '/admin/bookings', label: 'Manage Bookings', icon: FaCalendarAlt },
@@ -223,12 +207,10 @@ const AdminDashboard = () => {
             ))}
           </div>
 
-          {/* Recent Bookings – card list on mobile, table on desktop */}
           <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
             <div className="p-5 border-b border-gray-100">
               <h3 className="font-semibold text-gray-700">Recent Bookings</h3>
             </div>
-            {/* Mobile cards */}
             <div className="md:hidden divide-y divide-gray-100">
               {stats?.recentBookings?.map((booking, index) => (
                 <div key={index} className="p-4 space-y-2">
@@ -247,7 +229,6 @@ const AdminDashboard = () => {
                 </div>
               ))}
             </div>
-            {/* Desktop table */}
             <div className="hidden md:block overflow-x-auto">
               <table className="w-full">
                 <thead className="bg-gray-50">

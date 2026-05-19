@@ -1,24 +1,63 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FaTimes } from 'react-icons/fa';
+import { FaTimes, FaSpinner } from 'react-icons/fa';
 import popupBannerService from '../../services/popupBannerService';
 
 const PopupBanner = () => {
   const [banner, setBanner] = useState(null);
   const [isOpen, setIsOpen] = useState(false);
+  const [imageLoading, setImageLoading] = useState(true);
   const navigate = useNavigate();
+
+  // Helper to add Cloudinary optimization parameters
+  const optimizeImageUrl = (url) => {
+    if (!url) return url;
+    // If it's a Cloudinary URL, append q_auto,f_auto
+    if (url.includes('cloudinary.com')) {
+      // Check if already has query params
+      const separator = url.includes('?') ? '&' : '?';
+      return `${url}${separator}q_auto,f_auto`;
+    }
+    return url;
+  };
 
   useEffect(() => {
     const fetchBanner = async () => {
       try {
         const response = await popupBannerService.getActiveBanner();
         if (response.success && response.data) {
-          setBanner(response.data);
-          // Check if the banner was already shown in this session
+          const bannerData = response.data;
+          // Optimize image URL
+          if (bannerData.imageUrl) {
+            bannerData.optimizedImageUrl = optimizeImageUrl(bannerData.imageUrl);
+          }
+          setBanner(bannerData);
+          
+          // Check if banner already shown in this session
           const hasSeen = sessionStorage.getItem('popupBannerSeen');
           if (!hasSeen) {
-            setIsOpen(true);
-            sessionStorage.setItem('popupBannerSeen', 'true');
+            // Preload the image in background to speed up display
+            if (bannerData.optimizedImageUrl) {
+              const img = new Image();
+              img.onload = () => {
+                // Image is preloaded; open popup now
+                setIsOpen(true);
+                sessionStorage.setItem('popupBannerSeen', 'true');
+                setImageLoading(false);
+              };
+              img.onerror = () => {
+                // Even if image fails, open popup without image
+                setIsOpen(true);
+                sessionStorage.setItem('popupBannerSeen', 'true');
+                setImageLoading(false);
+              };
+              img.src = bannerData.optimizedImageUrl;
+            } else {
+              // No image, open popup immediately
+              setIsOpen(true);
+              sessionStorage.setItem('popupBannerSeen', 'true');
+              setImageLoading(false);
+            }
           }
         }
       } catch (error) {
@@ -47,14 +86,25 @@ const PopupBanner = () => {
           <FaTimes size={20} />
         </button>
 
-        {/* Banner image */}
-        {banner.imageUrl && (
-          <img
-            src={banner.imageUrl}
-            alt={banner.title || 'Special Offer'}
-            className="w-full object-cover"
-          />
-        )}
+        {/* Banner image with loading spinner */}
+        <div className="relative bg-gray-100">
+          {imageLoading && (
+            <div className="absolute inset-0 flex items-center justify-center z-10">
+              <FaSpinner className="animate-spin text-blue-600 text-3xl" />
+            </div>
+          )}
+          {banner.optimizedImageUrl && (
+            <img
+              src={banner.optimizedImageUrl}
+              alt={banner.title || 'Special Offer'}
+              className={`w-full object-cover transition-opacity duration-300 ${
+                imageLoading ? 'opacity-0' : 'opacity-100'
+              }`}
+              onLoad={() => setImageLoading(false)}
+              onError={() => setImageLoading(false)}
+            />
+          )}
+        </div>
 
         {/* Text content */}
         <div className="p-5 text-center">
