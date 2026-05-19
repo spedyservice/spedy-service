@@ -5,6 +5,7 @@ import Footer from './components/common/Footer';
 import AdminLayout from './components/common/AdminLayout';
 import ProtectedRoute from './components/common/ProtectedRoute';
 import AdminRoute from './components/common/AdminRoute';
+import PopupBanner from './components/common/PopupBanner'; // ✅ added for popup
 
 // Lazy load most pages
 const HomePage = lazy(() => import('./pages/HomePage'));
@@ -40,6 +41,7 @@ const AdminSettings = lazy(() => import('./pages/admin/AdminSettings'));
 const AdminProductCategories = lazy(() => import('./pages/admin/AdminProductCategories'));
 const AdminProducts = lazy(() => import('./pages/admin/AdminProducts'));
 const AdminOrders = lazy(() => import('./pages/admin/AdminOrders'));
+const AdminPopupBanners = lazy(() => import('./pages/admin/AdminPopupBanners')); // ✅ NEW
 
 const PageLoader = () => (
   <div className="min-h-screen flex items-center justify-center">
@@ -58,6 +60,7 @@ function App() {
     '/admin/brands',
     '/admin/banners',
     '/admin/videos',
+    '/admin/popup-banners', // ✅ added
     '/admin/users',
     '/admin/settings',
     '/admin/categories',
@@ -96,6 +99,7 @@ function App() {
               <Route path="/admin/brands" element={<AdminBrands />} />
               <Route path="/admin/banners" element={<AdminBanners />} />
               <Route path="/admin/videos" element={<AdminVideos />} />
+              <Route path="/admin/popup-banners" element={<AdminPopupBanners />} /> {/* ✅ NEW */}
               <Route path="/admin/categories" element={<AdminProductCategories />} />
               <Route path="/admin/products" element={<AdminProducts />} />
               <Route path="/admin/orders" element={<AdminOrders />} />
@@ -137,6 +141,8 @@ function App() {
         </Suspense>
       </main>
       {!shouldHideNavbarFooter && !hideFooter && <Footer />}
+      {/* ✅ Popup banner appears on all non‑admin pages (overlay) */}
+      <PopupBanner />
     </div>
   );
 }

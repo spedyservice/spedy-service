@@ -6,6 +6,10 @@ const Brand = require('../models/Brand');
 const Product = require('../models/Product');
 const ProductCategory = require('../models/ProductCategory');
 const Order = require('../models/Order');
+// Cloudinary for image upload
+const cloudinaryService = require('../config/cloudinary');
+// Popup banner model
+const PopupBanner = require('../models/PopupBanner');
 
 /**
  * @desc    Get admin dashboard overview
@@ -575,6 +579,130 @@ const getRevenueReport = async (req, res) => {
   }
 };
 
+// ================= POPUP BANNER MANAGEMENT WITH IMAGE UPLOAD =================
+
+/**
+ * @desc    Get active popup banner (public)
+ * @route   GET /api/popup-banner
+ * @access  Public
+ */
+const getActivePopupBanner = async (req, res) => {
+  try {
+    const banner = await PopupBanner.findOne({ isActive: true }).sort({ displayOrder: 1 });
+    if (!banner) {
+      return res.status(404).json({ success: false, message: 'No active popup banner found' });
+    }
+    res.json({ success: true, data: banner });
+  } catch (error) {
+    console.error('Get active popup banner error:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+/**
+ * @desc    Get all popup banners (admin)
+ * @route   GET /api/admin/popup-banners
+ * @access  Private/Admin
+ */
+const getAllPopupBanners = async (req, res) => {
+  try {
+    const banners = await PopupBanner.find().sort({ displayOrder: 1 });
+    res.json({ success: true, data: banners });
+  } catch (error) {
+    console.error('Get all popup banners error:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+/**
+ * @desc    Create a new popup banner (admin) with image upload
+ * @route   POST /api/admin/popup-banners
+ * @access  Private/Admin
+ */
+const createPopupBanner = async (req, res) => {
+  try {
+    const bannerData = { ...req.body };
+    
+    // Upload image from memory buffer if file provided
+    if (req.file) {
+      const result = await cloudinaryService.uploadBuffer(req.file.buffer, {
+        folder: 'spedy-popup-banners',
+      });
+      bannerData.imageUrl = result.url;
+    } else {
+      // No image file, require imageUrl (fallback)
+      if (!bannerData.imageUrl) {
+        return res.status(400).json({ success: false, message: 'Image is required' });
+      }
+    }
+    
+    const banner = await PopupBanner.create(bannerData);
+    res.status(201).json({ success: true, data: banner });
+  } catch (error) {
+    console.error('Create popup banner error:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+/**
+ * @desc    Update a popup banner (admin) with optional image upload
+ * @route   PUT /api/admin/popup-banners/:id
+ * @access  Private/Admin
+ */
+const updatePopupBanner = async (req, res) => {
+  try {
+    const banner = await PopupBanner.findById(req.params.id);
+    if (!banner) {
+      return res.status(404).json({ success: false, message: 'Banner not found' });
+    }
+    
+    const updateData = { ...req.body };
+    
+    // If new image uploaded, delete old one from Cloudinary and upload new
+    if (req.file) {
+      // Delete old image if exists
+      if (banner.imageUrl) {
+        const publicId = banner.imageUrl.split('/').pop().split('.')[0];
+        await cloudinaryService.deleteImage(`spedy-popup-banners/${publicId}`);
+      }
+      const result = await cloudinaryService.uploadBuffer(req.file.buffer, {
+        folder: 'spedy-popup-banners',
+      });
+      updateData.imageUrl = result.url;
+    }
+    
+    const updatedBanner = await PopupBanner.findByIdAndUpdate(req.params.id, updateData, { new: true, runValidators: true });
+    res.json({ success: true, data: updatedBanner });
+  } catch (error) {
+    console.error('Update popup banner error:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+/**
+ * @desc    Delete a popup banner (admin) and remove image from Cloudinary
+ * @route   DELETE /api/admin/popup-banners/:id
+ * @access  Private/Admin
+ */
+const deletePopupBanner = async (req, res) => {
+  try {
+    const banner = await PopupBanner.findById(req.params.id);
+    if (!banner) return res.status(404).json({ success: false, message: 'Banner not found' });
+    
+    // Delete image from Cloudinary if exists
+    if (banner.imageUrl) {
+      const publicId = banner.imageUrl.split('/').pop().split('.')[0];
+      await cloudinaryService.deleteImage(`spedy-popup-banners/${publicId}`);
+    }
+    
+    await banner.deleteOne();
+    res.json({ success: true, message: 'Banner deleted successfully' });
+  } catch (error) {
+    console.error('Delete popup banner error:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
 module.exports = {
   getDashboardOverview,
   getAllUsers,
@@ -584,5 +712,10 @@ module.exports = {
   createAdmin,
   getSystemStats,
   getBookingAnalytics,
-  getRevenueReport
+  getRevenueReport,
+  getActivePopupBanner,
+  getAllPopupBanners,
+  createPopupBanner,
+  updatePopupBanner,
+  deletePopupBanner
 };

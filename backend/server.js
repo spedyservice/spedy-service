@@ -199,6 +199,21 @@ app.use('/api/reviews', reviewRoutes);
 app.use('/api/banners', bannerRoutes);
 app.use('/api/videos', videoRoutes);
 
+// ================= POPUP BANNER PUBLIC ROUTE =================
+const PopupBanner = require('./models/PopupBanner');
+app.get('/api/popup-banner/active', async (req, res) => {
+  try {
+    const banner = await PopupBanner.findOne({ isActive: true }).sort({ displayOrder: 1 });
+    if (!banner) {
+      return res.status(404).json({ success: false, message: 'No active popup banner found' });
+    }
+    res.json({ success: true, data: banner });
+  } catch (error) {
+    console.error('Error fetching popup banner:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
 // ================= HEALTH ROUTE =================
 app.get('/health', async (req, res) => {
   try {

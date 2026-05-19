@@ -9,15 +9,20 @@ const {
   createAdmin,
   getSystemStats,
   getBookingAnalytics,
-  getRevenueReport
+  getRevenueReport,
+  getAllPopupBanners,
+  createPopupBanner,
+  updatePopupBanner,
+  deletePopupBanner,
 } = require('../controllers/adminController');
 const { protect } = require('../middleware/auth');
 const { isAdmin, isSuperAdmin } = require('../middleware/admin');
 const { idValidation, paginationValidation } = require('../middleware/validation');
+const { uploadSingleMemory } = require('../middleware/upload');
 
 // All admin routes require authentication and admin privileges
 router.use(protect);
-router.use(isAdmin);  // Changed from 'admin' to 'isAdmin'
+router.use(isAdmin);
 
 // Dashboard and stats
 router.get('/dashboard', getDashboardOverview);
@@ -33,5 +38,11 @@ router.delete('/users/:id', idValidation, deleteUser);
 
 // Admin creation (super admin only)
 router.post('/create-admin', isSuperAdmin, createAdmin);
+
+// Popup banner management with image upload
+router.get('/popup-banners', getAllPopupBanners);
+router.post('/popup-banners', uploadSingleMemory('image'), createPopupBanner);
+router.put('/popup-banners/:id', idValidation, uploadSingleMemory('image'), updatePopupBanner);
+router.delete('/popup-banners/:id', idValidation, deletePopupBanner);
 
 module.exports = router;

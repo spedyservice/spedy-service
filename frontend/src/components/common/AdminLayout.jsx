@@ -17,6 +17,7 @@ import {
   FaShoppingBag,
   FaImage,
   FaVideo,
+  FaWindowRestore, // icon for popup banners
 } from 'react-icons/fa';
 
 const AdminLayout = ({ children }) => {
@@ -37,6 +38,7 @@ const AdminLayout = ({ children }) => {
     { path: '/admin/brands', label: 'Brands', icon: FaTag },
     { path: '/admin/banners', label: 'Banners', icon: FaImage },
     { path: '/admin/videos', label: 'Videos', icon: FaVideo },
+    { path: '/admin/popup-banners', label: 'Popup Banners', icon: FaWindowRestore }, // ✅ NEW
     { path: '/admin/categories', label: 'Product Categories', icon: FaList },
     { path: '/admin/products', label: 'Products', icon: FaBox },
     { path: '/admin/orders', label: 'Orders', icon: FaShoppingBag },

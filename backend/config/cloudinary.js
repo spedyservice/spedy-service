@@ -17,6 +17,7 @@ class CloudinaryService {
         cloud_name: cloudName,
         api_key: apiKey,
         api_secret: apiSecret,
+        timeout: 60000, // ✅ added to prevent timeout on large uploads
       });
       this.isConfigured = true;
       console.log('✅ Cloudinary configured successfully');
@@ -38,11 +39,12 @@ class CloudinaryService {
     }
 
     const defaultOptions = {
-      folder: 'mondal-electronics',
+      folder: 'spedy-popup-banners', // ✅ changed from 'mondal-electronics' to dedicated folder
       use_filename: true,
       unique_filename: true,
       overwrite: true,
       resource_type: 'auto',
+      timeout: 60000, // ✅ added to prevent timeout
     };
 
     const uploadOptions = { ...defaultOptions, ...options };
