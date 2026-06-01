@@ -506,4 +506,5 @@ module.exports = {
   getBookingStats,
   getBookingsByDateRange,
   getPublicReviews
+  
 };
