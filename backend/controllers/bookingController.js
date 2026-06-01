@@ -270,7 +270,7 @@ const cancelBooking = async (req, res) => {
 };
 
 /**
- * @desc    Add review to completed booking
+ * @desc    Add review to completed booking (FIXED)
  * @route   POST /api/bookings/:id/review
  * @access  Private
  */
@@ -286,7 +286,12 @@ const addBookingReview = async (req, res) => {
       });
     }
 
-    if (booking.email !== req.user.email) {
+    // ✅ FIX: Allow authorization by email OR phone (for guest bookings)
+    const isAuthorized = 
+      booking.email === req.user.email || 
+      (booking.phone && booking.phone === req.user.phone);
+    
+    if (!isAuthorized) {
       return res.status(403).json({
         success: false,
         message: 'Not authorized to review this booking'
@@ -472,8 +477,8 @@ const getPublicReviews = async (req, res) => {
       status: 'completed',
       rating: { $ne: null }
     })
-      .select('customerName rating review updatedAt')
-      .sort({ updatedAt: -1 })
+      .select('customerName rating review reviewedAt') // Use reviewedAt for sorting
+      .sort({ reviewedAt: -1 })
       .limit(20);
 
     res.json({
