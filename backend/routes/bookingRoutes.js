@@ -11,32 +11,34 @@ const {
   cancelBooking,
   addBookingReview,
   getBookingsByDateRange,
-  getPublicReviews          // ← import the new function
+  getPublicReviews
 } = require('../controllers/bookingController');
 const { protect, admin } = require('../middleware/auth');
-const { 
-  createBookingValidation, 
-  updateBookingStatusValidation, 
+const {
+  createBookingValidation,
+  updateBookingStatusValidation,
   idValidation,
-  paginationValidation 
+  paginationValidation
 } = require('../middleware/validation');
 
-// Public routes
+// ─── Public routes ───────────────────────────────────────────────
 router.post('/', createBookingValidation, createBooking);
 
-// ★ NEW public endpoint for testimonials
+// ✅ All static/named routes MUST come before /:id
 router.get('/reviews/public', getPublicReviews);
-
-// Protected user routes
 router.get('/mybookings', protect, getMyBookings);
+
+// ✅ Admin stat routes also before /:id so Express doesn't swallow them
+router.get('/stats/overview', protect, admin, getBookingStats);
+router.get('/stats/by-date', protect, admin, getBookingsByDateRange);
+
+// ─── Admin list route ─────────────────────────────────────────────
+router.get('/', protect, admin, paginationValidation, getAllBookings);
+
+// ─── Param routes (/:id) — always last ───────────────────────────
 router.get('/:id', protect, idValidation, getBookingById);
 router.post('/:id/cancel', protect, idValidation, cancelBooking);
 router.post('/:id/review', protect, idValidation, addBookingReview);
-
-// Admin only routes
-router.get('/', protect, admin, paginationValidation, getAllBookings);
-router.get('/stats/overview', protect, admin, getBookingStats);
-router.get('/stats/by-date', protect, admin, getBookingsByDateRange);
 router.put('/:id/status', protect, admin, updateBookingStatusValidation, updateBookingStatus);
 router.delete('/:id', protect, admin, idValidation, deleteBooking);
 

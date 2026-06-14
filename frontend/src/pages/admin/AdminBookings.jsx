@@ -138,7 +138,7 @@ const AdminBookings = () => {
           </div>
         </div>
 
-        {/* Desktop Table */}
+        {/* Desktop Table – with sticky actions column */}
         <div className="hidden md:block bg-white rounded-xl shadow-sm border overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
@@ -150,7 +150,7 @@ const AdminBookings = () => {
                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Status</th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Address</th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Issue</th>
-                <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase">Actions</th>
+                <th className="sticky right-0 bg-gray-50 px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase shadow-[-4px_0_8px_-4px_rgba(0,0,0,0.05)]">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
@@ -196,10 +196,22 @@ const AdminBookings = () => {
                     <td className="px-4 py-3 text-sm max-w-xs truncate" title={booking.issueDescription}>
                       {booking.issueDescription || '—'}
                     </td>
-                    <td className="px-4 py-3 text-center">
+                    <td className="sticky right-0 bg-white px-4 py-3 text-center shadow-[-4px_0_8px_-4px_rgba(0,0,0,0.05)]">
                       <div className="flex items-center justify-center gap-2">
-                        <button onClick={() => { setSelectedBooking(booking); setShowViewModal(true); }} className="text-blue-600 hover:text-blue-800 transition" title="View Details"><FaEye size={16} /></button>
-                        <button onClick={() => { setDeleteId(booking._id); setShowDeleteConfirm(true); }} className="text-red-500 hover:text-red-700 transition" title="Delete"><FaTrash size={14} /></button>
+                        <button
+                          onClick={() => { setSelectedBooking(booking); setShowViewModal(true); }}
+                          className="text-blue-600 hover:text-blue-800 transition"
+                          title="View Details"
+                        >
+                          <FaEye size={16} />
+                        </button>
+                        <button
+                          onClick={() => { setDeleteId(booking._id); setShowDeleteConfirm(true); }}
+                          className="text-red-500 hover:text-red-700 transition"
+                          title="Delete"
+                        >
+                          <FaTrash size={14} />
+                        </button>
                       </div>
                     </td>
                   </tr>
@@ -209,7 +221,7 @@ const AdminBookings = () => {
           </table>
         </div>
 
-        {/* Mobile Cards – with responsive badge fix */}
+        {/* Mobile Cards – unchanged */}
         <div className="md:hidden space-y-4">
           {currentBookings.length === 0 ? (
             <div className="text-center py-8 text-gray-500 bg-white rounded-xl shadow-sm">No bookings found</div>
@@ -265,7 +277,7 @@ const AdminBookings = () => {
         )}
       </div>
 
-      {/* View Details Modal */}
+      {/* View Details Modal (unchanged) */}
       <AnimatePresence>
         {showViewModal && selectedBooking && (
           <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
@@ -307,7 +319,7 @@ const AdminBookings = () => {
         )}
       </AnimatePresence>
 
-      {/* Delete Confirmation Modal */}
+      {/* Delete Confirmation Modal (unchanged) */}
       <AnimatePresence>
         {showDeleteConfirm && (
           <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">

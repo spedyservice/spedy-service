@@ -1,24 +1,27 @@
 import React, { useState, useEffect, useCallback } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
-import { FaStar, FaQuoteLeft, FaChevronLeft, FaChevronRight, FaCheckCircle } from 'react-icons/fa'
+import { motion } from 'framer-motion'
+import { FaStar, FaQuoteLeft, FaCheckCircle } from 'react-icons/fa'
 import api from '../../services/api'
 
 const Testimonials = () => {
   const [reviews, setReviews] = useState([])
-  const [currentIndex, setCurrentIndex] = useState(0)
   const [loading, setLoading] = useState(true)
-  const [direction, setDirection] = useState(0)
 
   const fetchReviews = useCallback(async () => {
     try {
+      console.log('Fetching from /bookings/reviews/public')
       const response = await api.get('/bookings/reviews/public')
-      if (response.data.success && response.data.data.length > 0) {
-        setReviews(response.data.data)
-      } else {
-        setReviews([])
+      console.log('Response:', response)
+
+      let list = []
+      if (response?.success && Array.isArray(response?.data)) {
+        list = response.data
+      } else if (Array.isArray(response)) {
+        list = response
       }
-    } catch (error) {
-      console.error('Error fetching real reviews:', error)
+      setReviews(list)
+    } catch (err) {
+      console.error('Error fetching reviews:', err)
       setReviews([])
     } finally {
       setLoading(false)
@@ -29,53 +32,9 @@ const Testimonials = () => {
     fetchReviews()
   }, [fetchReviews])
 
-  useEffect(() => {
-    if (reviews.length <= 1) return
-    const interval = setInterval(() => {
-      setDirection(1)
-      setCurrentIndex((prev) => (prev + 1) % reviews.length)
-    }, 6000)
-    return () => clearInterval(interval)
-  }, [reviews.length])
-
-  const goToPrev = () => {
-    setDirection(-1)
-    setCurrentIndex((prev) => (prev - 1 + reviews.length) % reviews.length)
-  }
-
-  const goToNext = () => {
-    setDirection(1)
-    setCurrentIndex((prev) => (prev + 1) % reviews.length)
-  }
-
-  const goToSlide = (index) => {
-    setDirection(index > currentIndex ? 1 : -1)
-    setCurrentIndex(index)
-  }
-
   const getInitials = (name) => {
     if (!name) return 'U'
     return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
-  }
-
-  const slideVariants = {
-    enter: (direction) => ({
-      x: direction > 0 ? 200 : -200,
-      opacity: 0,
-      scale: 0.96
-    }),
-    center: {
-      x: 0,
-      opacity: 1,
-      scale: 1,
-      transition: { x: { type: 'spring', stiffness: 400, damping: 35 }, opacity: { duration: 0.3 } }
-    },
-    exit: (direction) => ({
-      x: direction > 0 ? -200 : 200,
-      opacity: 0,
-      scale: 0.96,
-      transition: { opacity: { duration: 0.2 } }
-    })
   }
 
   if (loading) {
@@ -83,6 +42,7 @@ const Testimonials = () => {
       <section className="py-10 bg-white">
         <div className="container-custom text-center">
           <div className="inline-block w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+          <p className="mt-3 text-gray-400 text-sm">Loading reviews...</p>
         </div>
       </section>
     )
@@ -90,15 +50,13 @@ const Testimonials = () => {
 
   if (reviews.length === 0) return null
 
-  const current = reviews[currentIndex]
-
   return (
     <section className="py-12 sm:py-16 bg-gradient-to-b from-gray-50 to-white">
-      <div className="container-custom max-w-6xl mx-auto px-4">
-        <div className="text-center mb-8 sm:mb-10">
-          
-          <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mt-2 mb-1"
-            style={{ fontFamily: "'Centrale Sans', sans-serif", fontWeight: 700 }}>
+      <div className="container-custom max-w-7xl mx-auto px-4">
+        {/* Header */}
+        <div className="text-center mb-10 sm:mb-12">
+         
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-2">
             What Our Customers Say
           </h2>
           <p className="text-gray-500 text-sm sm:text-base max-w-md mx-auto">
@@ -106,103 +64,66 @@ const Testimonials = () => {
           </p>
         </div>
 
-        <div className="relative max-w-3xl mx-auto">
-          <div className="relative bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
-            <div className="h-1 bg-gradient-to-r from-blue-500 to-blue-700" />
+        {/* Responsive grid – horizontal layout (replaces carousel) */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+          {reviews.map((review, idx) => (
+            <motion.div
+              key={idx}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: idx * 0.05 }}
+              className="bg-white rounded-2xl shadow-md hover:shadow-lg transition-shadow p-6 flex flex-col border border-gray-100"
+            >
+              {/* Quote icon */}
+              <div className="mb-3">
+                <FaQuoteLeft className="text-blue-100 text-3xl" />
+              </div>
 
-            <AnimatePresence initial={false} custom={direction} mode="wait">
-              <motion.div
-                key={currentIndex}
-                custom={direction}
-                variants={slideVariants}
-                initial="enter"
-                animate="center"
-                exit="exit"
-                className="p-6 sm:p-8 md:p-10"
-              >
-                <div className="flex justify-center mb-4">
-                  <FaQuoteLeft className="text-blue-100 text-4xl sm:text-5xl" />
+              {/* Review text */}
+              <p className="text-gray-700 text-sm leading-relaxed mb-4 flex-1">
+                “{review.review || 'Great service!'}”
+              </p>
+
+              {/* Stars */}
+              <div className="flex gap-1 mb-4">
+                {[...Array(5)].map((_, i) => (
+                  <FaStar
+                    key={i}
+                    className="w-4 h-4"
+                    style={{ color: i < (review.rating || 5) ? '#facc15' : '#e5e7eb' }}
+                  />
+                ))}
+              </div>
+
+              {/* Customer info */}
+              <div className="flex items-center gap-3 pt-3 border-t border-gray-100">
+                <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-sm shadow-md">
+                  {getInitials(review.customerName)}
                 </div>
-
-                <p className="text-gray-700 text-sm sm:text-lg leading-relaxed mb-6 text-center italic font-light">
-                  “{current.review || 'No review text'}”
-                </p>
-
-                {/* Stars – now using inline style for guaranteed yellow color */}
-                <div className="flex justify-center gap-1 mb-5">
-                  {[...Array(5)].map((_, i) => (
-                    <FaStar
-                      key={i}
-                      className="w-5 h-5 sm:w-6 sm:h-6"
-                      style={{ color: i < (current.rating || 0) ? '#facc15' : '#e5e7eb' }}
-                    />
-                  ))}
-                </div>
-
-                <div className="flex flex-col items-center">
-                  <div className="flex items-center justify-center gap-3 mb-2">
-                    <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-lg sm:text-xl shadow-md">
-                      {getInitials(current.customerName)}
-                    </div>
-                    <div className="text-left">
-                      <h4 className="font-semibold text-gray-800 text-sm sm:text-base">
-                        {current.customerName}
-                      </h4>
-                      <div className="flex items-center gap-1 text-xs text-green-600">
-                        <FaCheckCircle className="text-xs" />
-                        <span>Verified Customer</span>
-                      </div>
-                    </div>
+                <div>
+                  <h4 className="font-semibold text-gray-800 text-sm">
+                    {review.customerName || 'Customer'}
+                  </h4>
+                  <div className="flex items-center gap-1 text-xs text-green-600">
+                    <FaCheckCircle className="text-xs" />
+                    <span>Verified Customer</span>
                   </div>
-                  {current.updatedAt && (
-                    <span className="text-xs text-gray-400 mt-1">
-                      {new Date(current.updatedAt).toLocaleDateString('en-IN', {
-                        day: 'numeric',
-                        month: 'long',
-                        year: 'numeric'
-                      })}
-                    </span>
-                  )}
                 </div>
-              </motion.div>
-            </AnimatePresence>
-          </div>
+              </div>
 
-          {reviews.length > 1 && (
-            <>
-              <button
-                onClick={goToPrev}
-                className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 sm:-translate-x-6 w-10 h-10 bg-white rounded-full shadow-lg flex items-center justify-center text-gray-600 hover:text-blue-600 hover:shadow-xl transition-all duration-200 focus:outline-none"
-                aria-label="Previous review"
-              >
-                <FaChevronLeft className="text-sm sm:text-base" />
-              </button>
-              <button
-                onClick={goToNext}
-                className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 sm:translate-x-6 w-10 h-10 bg-white rounded-full shadow-lg flex items-center justify-center text-gray-600 hover:text-blue-600 hover:shadow-xl transition-all duration-200 focus:outline-none"
-                aria-label="Next review"
-              >
-                <FaChevronRight className="text-sm sm:text-base" />
-              </button>
-            </>
-          )}
-
-          {reviews.length > 1 && (
-            <div className="flex justify-center gap-2 mt-6">
-              {reviews.map((_, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => goToSlide(idx)}
-                  className={`transition-all duration-300 rounded-full ${
-                    idx === currentIndex
-                      ? 'w-8 h-2.5 bg-blue-600'
-                      : 'w-2.5 h-2.5 bg-gray-300 hover:bg-gray-400'
-                  }`}
-                  aria-label={`Go to review ${idx + 1}`}
-                />
-              ))}
-            </div>
-          )}
+              {/* Date */}
+              {review.reviewedAt && (
+                <p className="text-xs text-gray-400 mt-2 text-right">
+                  {new Date(review.reviewedAt).toLocaleDateString('en-IN', {
+                    day: 'numeric',
+                    month: 'short',
+                    year: 'numeric'
+                  })}
+                </p>
+              )}
+            </motion.div>
+          ))}
         </div>
       </div>
     </section>

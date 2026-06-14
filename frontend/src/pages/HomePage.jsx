@@ -3,18 +3,18 @@ import ProductCategorySection from '../components/home/ProductCategorySection';
 import Hero from '../components/home/Hero';
 import TrustFeatures from '../components/home/TrustFeatures';
 import ImageServicesSection from '../components/home/ImageServicesSection';
-import CallNowSection from '../components/home/CallNowSection'; // ✅ ADDED
+import CallNowSection from '../components/home/CallNowSection';
 
-// Lazy‑load the heavier sections below the fold
-const ServicesSection = React.lazy(() => import('../components/home/ServicesSection'));
-const BrandsSection = React.lazy(() => import('../components/home/BrandsSection'));
-const FeaturedProducts = React.lazy(() => import('../components/home/FeaturedProducts'));
-const VideoSection = React.lazy(() => import('../components/home/VideoSection'));
-const ExpertSection = React.lazy(() => import('../components/home/ExpertSection'));
-const MapSection = React.lazy(() => import('../components/home/MapSection'));
-const HowItWorks = React.lazy(() => import('../components/home/HowItWorks'));
-const WhyChooseUs = React.lazy(() => import('../components/home/WhyChooseUs'));
-const Testimonials = React.lazy(() => import('../components/home/Testimonials'));
+// Lazy-load heavier sections below the fold
+const ServicesSection   = React.lazy(() => import('../components/home/ServicesSection'));
+const BrandsSection     = React.lazy(() => import('../components/home/BrandsSection'));
+const FeaturedProducts  = React.lazy(() => import('../components/home/FeaturedProducts'));
+const VideoSection      = React.lazy(() => import('../components/home/VideoSection'));
+const ExpertSection     = React.lazy(() => import('../components/home/ExpertSection'));
+const MapSection        = React.lazy(() => import('../components/home/MapSection'));
+const HowItWorks        = React.lazy(() => import('../components/home/HowItWorks'));
+const WhyChooseUs       = React.lazy(() => import('../components/home/WhyChooseUs'));
+const Testimonials      = React.lazy(() => import('../components/home/Testimonials'));
 
 const SectionLoader = () => (
   <div className="flex justify-center py-10">
@@ -69,9 +69,6 @@ const HomePage = () => {
           <Suspense fallback={<SectionLoader />}>
             <ExpertSection />
           </Suspense>
-          <Suspense fallback={<SectionLoader />}>
-            <Testimonials />
-          </Suspense>
         </>
       )}
 
@@ -82,14 +79,13 @@ const HomePage = () => {
           <Suspense fallback={<SectionLoader />}>
             <FeaturedProducts />
           </Suspense>
-          {/* ✅ VideoSection moved here */}
           <Suspense fallback={<SectionLoader />}>
             <VideoSection />
           </Suspense>
         </>
       )}
 
-      {/* Shared Sections */}
+      {/* Shared Sections — always visible regardless of tab */}
       <Suspense fallback={<SectionLoader />}>
         <BrandsSection />
       </Suspense>
@@ -101,6 +97,11 @@ const HomePage = () => {
       </Suspense>
       <Suspense fallback={<SectionLoader />}>
         <WhyChooseUs />
+      </Suspense>
+
+      {/* ✅ Testimonials — after WhyChooseUs, before footer */}
+      <Suspense fallback={<SectionLoader />}>
+        <Testimonials />
       </Suspense>
     </>
   );

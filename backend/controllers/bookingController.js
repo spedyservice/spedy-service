@@ -13,14 +13,11 @@ const createBooking = async (req, res) => {
       status: 'pending'
     };
 
-    // 1. Save booking to DB (fast)
     const booking = await Booking.create(bookingData);
 
-    // 2. Send email in the background – don't await, don't block response
     emailService.sendBookingConfirmation(booking, booking.email)
       .catch(err => console.error('Background email error (booking confirmation):', err));
 
-    // 3. Respond immediately
     res.status(201).json({
       success: true,
       message: 'Booking created successfully! Our team will contact you shortly.',
@@ -47,17 +44,17 @@ const createBooking = async (req, res) => {
  */
 const getAllBookings = async (req, res) => {
   try {
-    const { 
-      status, 
-      search, 
-      page = 1, 
-      limit = 10,
+    const {
+      status,
+      search,
+      page = 1,
+      limit,           // ← remove default limit; make it optional
       startDate,
       endDate,
       productCategory,
       pincode
     } = req.query;
-    
+
     let query = {};
 
     if (status && status !== 'all') {
@@ -83,23 +80,27 @@ const getAllBookings = async (req, res) => {
     if (productCategory) query.productCategory = productCategory;
     if (pincode) query.pincode = pincode;
 
-    const bookings = await Booking.find(query)
-      .sort({ createdAt: -1 })
-      .limit(limit * 1)
-      .skip((page - 1) * limit)
-      .populate('assignedTechnician', 'name phone');
+    // Build the query
+    let queryBuilder = Booking.find(query).sort({ createdAt: -1 }).populate('assignedTechnician', 'name phone');
 
-    const total = await Booking.countDocuments(query);
+    // Apply pagination only if limit is provided and is a positive integer
+    let total = await Booking.countDocuments(query);
+    if (limit && parseInt(limit) > 0) {
+      const skip = (parseInt(page) - 1) * parseInt(limit);
+      queryBuilder = queryBuilder.skip(skip).limit(parseInt(limit));
+    }
+
+    const bookings = await queryBuilder;
 
     res.json({
       success: true,
       data: bookings,
-      pagination: {
+      pagination: limit ? {
         page: parseInt(page),
         limit: parseInt(limit),
         total,
-        pages: Math.ceil(total / limit)
-      }
+        pages: Math.ceil(total / parseInt(limit))
+      } : null
     });
   } catch (error) {
     console.error('Get all bookings error:', error);
@@ -117,8 +118,8 @@ const getAllBookings = async (req, res) => {
  */
 const getMyBookings = async (req, res) => {
   try {
-    const bookings = await Booking.find({ 
-      email: req.user.email 
+    const bookings = await Booking.find({
+      email: req.user.email
     }).sort({ createdAt: -1 });
 
     res.json({
@@ -198,7 +199,6 @@ const updateBookingStatus = async (req, res) => {
 
     await booking.save();
 
-    // Send status update email in background
     if (oldStatus !== status) {
       emailService.sendBookingStatusUpdate(booking, booking.email, oldStatus, status)
         .catch(err => console.error('Background email error (status update):', err));
@@ -251,7 +251,6 @@ const cancelBooking = async (req, res) => {
 
     await booking.cancel(cancellationReason || 'Cancelled by customer');
 
-    // Send cancellation email in background
     emailService.sendBookingStatusUpdate(booking, booking.email, booking.status, 'cancelled')
       .catch(err => console.error('Background email error (cancellation):', err));
 
@@ -270,7 +269,7 @@ const cancelBooking = async (req, res) => {
 };
 
 /**
- * @desc    Add review to completed booking (FIXED)
+ * @desc    Add review to completed booking
  * @route   POST /api/bookings/:id/review
  * @access  Private
  */
@@ -286,11 +285,10 @@ const addBookingReview = async (req, res) => {
       });
     }
 
-    // ✅ FIX: Allow authorization by email OR phone (for guest bookings)
-    const isAuthorized = 
-      booking.email === req.user.email || 
+    const isAuthorized =
+      booking.email === req.user.email ||
       (booking.phone && booking.phone === req.user.phone);
-    
+
     if (!isAuthorized) {
       return res.status(403).json({
         success: false,
@@ -473,17 +471,30 @@ const getBookingsByDateRange = async (req, res) => {
  */
 const getPublicReviews = async (req, res) => {
   try {
+    // ✅ FIXED: Removed `review: { $ne: '' }` filter — was excluding
+    // bookings where review was null/undefined (rating-only submissions).
+    // Now fetches ALL completed bookings that have a numeric rating.
     const bookings = await Booking.find({
       status: 'completed',
-      rating: { $ne: null }
+      rating: { $exists: true, $ne: null, $gte: 1 }
     })
-      .select('customerName rating review reviewedAt') // Use reviewedAt for sorting
-      .sort({ reviewedAt: -1 })
+      .select('customerName rating review reviewedAt updatedAt createdAt')
+      .sort({ reviewedAt: -1, updatedAt: -1, createdAt: -1 })
       .limit(20);
+
+    // ✅ Normalise data so frontend always gets consistent field names
+    const reviews = bookings.map(b => ({
+      _id: b._id,
+      customerName: b.customerName || 'Customer',
+      rating: b.rating,
+      review: b.review || '',
+      updatedAt: b.reviewedAt || b.updatedAt || b.createdAt
+    }));
 
     res.json({
       success: true,
-      data: bookings
+      count: reviews.length,
+      data: reviews
     });
   } catch (error) {
     console.error('Get public reviews error:', error);
@@ -506,5 +517,4 @@ module.exports = {
   getBookingStats,
   getBookingsByDateRange,
   getPublicReviews
-  
 };
