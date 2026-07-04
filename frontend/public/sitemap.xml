@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <!-- Homepage -->
+  <url>
+    <loc>https://spedyservice.in/</loc>
+    <lastmod>2026-07-04</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>1.0</priority>
+  </url>
+  
+  <!-- Main Pages -->
+  <url>
+    <loc>https://spedyservice.in/services</loc>
+    <lastmod>2026-07-04</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://spedyservice.in/shop</loc>
+    <lastmod>2026-07-04</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://spedyservice.in/book-now</loc>
+    <lastmod>2026-07-04</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://spedyservice.in/contact</loc>
+    <lastmod>2026-07-04</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  
+  <!-- User Account Pages -->
+  <url>
+    <loc>https://spedyservice.in/login</loc>
+    <lastmod>2026-07-04</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.3</priority>
+  </url>
+  <url>
+    <loc>https://spedyservice.in/register</loc>
+    <lastmod>2026-07-04</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.3</priority>
+  </url>
+  
+  <!-- Protected Pages (for logged-in users) -->
+  <url>
+    <loc>https://spedyservice.in/my-bookings</loc>
+    <lastmod>2026-07-04</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://spedyservice.in/my-orders</loc>
+    <lastmod>2026-07-04</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://spedyservice.in/profile</loc>
+    <lastmod>2026-07-04</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.4</priority>
+  </url>
+  
+  <!-- Product Pages (dynamic – you can expand this) -->
+  <url>
+    <loc>https://spedyservice.in/product/</loc>
+    <lastmod>2026-07-04</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  
+  <!-- Cart & Checkout -->
+  <url>
+    <loc>https://spedyservice.in/cart</loc>
+    <lastmod>2026-07-04</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.4</priority>
+  </url>
+  <url>
+    <loc>https://spedyservice.in/checkout</loc>
+    <lastmod>2026-07-04</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.3</priority>
+  </url>
+</urlset>
