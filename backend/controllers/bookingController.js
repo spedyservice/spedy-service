@@ -48,7 +48,7 @@ const getAllBookings = async (req, res) => {
       status,
       search,
       page = 1,
-      limit,           // ← remove default limit; make it optional
+      limit,
       startDate,
       endDate,
       productCategory,
@@ -80,10 +80,8 @@ const getAllBookings = async (req, res) => {
     if (productCategory) query.productCategory = productCategory;
     if (pincode) query.pincode = pincode;
 
-    // Build the query
     let queryBuilder = Booking.find(query).sort({ createdAt: -1 }).populate('assignedTechnician', 'name phone');
 
-    // Apply pagination only if limit is provided and is a positive integer
     let total = await Booking.countDocuments(query);
     if (limit && parseInt(limit) > 0) {
       const skip = (parseInt(page) - 1) * parseInt(limit);
@@ -174,7 +172,7 @@ const getBookingById = async (req, res) => {
 };
 
 /**
- * @desc    Update booking status (Admin only)
+ * @desc    Update booking status (Admin only) – FIXED with robust error handling
  * @route   PUT /api/bookings/:id/status
  * @access  Private/Admin
  */
@@ -192,16 +190,29 @@ const updateBookingStatus = async (req, res) => {
 
     const oldStatus = booking.status;
 
+    // Update fields
     booking.status = status || booking.status;
     booking.adminNotes = adminNotes || booking.adminNotes;
     booking.finalAmount = finalAmount || booking.finalAmount;
-    if (assignedTechnician) booking.assignedTechnician = assignedTechnician;
+    if (assignedTechnician) {
+      // Validate ObjectId before assigning
+      const isValid = mongoose.Types.ObjectId.isValid(assignedTechnician);
+      if (isValid) {
+        booking.assignedTechnician = assignedTechnician;
+      } else {
+        console.warn(`Invalid technician ID provided: ${assignedTechnician}`);
+      }
+    }
 
     await booking.save();
 
-    if (oldStatus !== status) {
+    // Send email only if status changed and email exists
+    if (oldStatus !== status && booking.email && booking.email.trim().length > 0) {
+      // Fire and forget – don't await to avoid blocking response
       emailService.sendBookingStatusUpdate(booking, booking.email, oldStatus, status)
         .catch(err => console.error('Background email error (status update):', err));
+    } else if (oldStatus !== status) {
+      console.log(`⚠️ No email provided for booking ${booking.bookingId}, skipping email notification.`);
     }
 
     res.json({
@@ -219,7 +230,7 @@ const updateBookingStatus = async (req, res) => {
 };
 
 /**
- * @desc    Cancel booking (User or Admin)
+ * @desc    Cancel booking (User or Admin) – FIXED with email check
  * @route   POST /api/bookings/:id/cancel
  * @access  Private
  */
@@ -251,8 +262,13 @@ const cancelBooking = async (req, res) => {
 
     await booking.cancel(cancellationReason || 'Cancelled by customer');
 
-    emailService.sendBookingStatusUpdate(booking, booking.email, booking.status, 'cancelled')
-      .catch(err => console.error('Background email error (cancellation):', err));
+    // Send cancellation email only if email exists
+    if (booking.email && booking.email.trim().length > 0) {
+      emailService.sendBookingStatusUpdate(booking, booking.email, booking.status, 'cancelled')
+        .catch(err => console.error('Background email error (cancellation):', err));
+    } else {
+      console.log(`⚠️ No email provided for booking ${booking.bookingId}, skipping cancellation email.`);
+    }
 
     res.json({
       success: true,
@@ -471,9 +487,6 @@ const getBookingsByDateRange = async (req, res) => {
  */
 const getPublicReviews = async (req, res) => {
   try {
-    // ✅ FIXED: Removed `review: { $ne: '' }` filter — was excluding
-    // bookings where review was null/undefined (rating-only submissions).
-    // Now fetches ALL completed bookings that have a numeric rating.
     const bookings = await Booking.find({
       status: 'completed',
       rating: { $exists: true, $ne: null, $gte: 1 }
@@ -482,7 +495,6 @@ const getPublicReviews = async (req, res) => {
       .sort({ reviewedAt: -1, updatedAt: -1, createdAt: -1 })
       .limit(20);
 
-    // ✅ Normalise data so frontend always gets consistent field names
     const reviews = bookings.map(b => ({
       _id: b._id,
       customerName: b.customerName || 'Customer',

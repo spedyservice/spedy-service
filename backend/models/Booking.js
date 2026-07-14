@@ -17,13 +17,12 @@ const bookingSchema = new mongoose.Schema({
   },
   email: {
     type: String,
-    required: false, // ✅ email is now optional
+    required: false,
     lowercase: true,
     trim: true,
-    // Validate only if email is provided
     validate: {
       validator: function(v) {
-        if (!v) return true; // empty string or null is allowed
+        if (!v) return true;
         return /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test(v);
       },
       message: 'Please add a valid email address'
@@ -78,6 +77,11 @@ const bookingSchema = new mongoose.Schema({
     required: [true, 'Please select preferred date'],
     validate: {
       validator: function(value) {
+        // ✅ Only validate past date when CREATING a new booking or when the field is modified
+        // For existing bookings (updates like status change), skip this validation
+        if (!this.isNew && !this.isModified('preferredDate')) {
+          return true;
+        }
         return value >= new Date().setHours(0, 0, 0, 0);
       },
       message: 'Preferred date cannot be in the past'
@@ -207,7 +211,7 @@ const bookingSchema = new mongoose.Schema({
   toObject: { virtuals: true }
 });
 
-// ============ PRE-SAVE MIDDLEWARE (Mongoose 7+ compatible - no next) ==========
+// ============ PRE-SAVE MIDDLEWARE ============
 
 // Generate unique booking ID before saving
 bookingSchema.pre('save', async function() {

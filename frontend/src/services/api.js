@@ -23,7 +23,7 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-  timeout: 30000,
+  timeout: 60000, // ✅ Increased from 30000 to 60000 to prevent timeout errors
 });
 
 // Request interceptor to add token and handle FormData
@@ -56,6 +56,17 @@ api.interceptors.response.use(
   (error) => {
     if (import.meta.env.DEV) {
       console.error('📥 API Response Error:', error.response?.config?.url, error.response?.data);
+    }
+    
+    // Handle timeout specifically
+    if (error.code === 'ECONNABORTED' && error.message.includes('timeout')) {
+      console.error('Request timeout:', error.config?.url);
+      return Promise.reject({
+        success: false,
+        message: 'Request timeout. Please try again.',
+        status: 408,
+        data: null,
+      });
     }
     
     if (error.response?.status === 401) {
