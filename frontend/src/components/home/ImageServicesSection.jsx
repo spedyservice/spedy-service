@@ -1,7 +1,7 @@
 import React from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import wmImg from '../../assets/washingmachine.avif'
+import wmImg from '../../assets/washingmachine.png'
 import fridgeImg from '../../assets/refrigerator.png'
 import tvImg from '../../assets/tv repair.jpeg'
 import acImg from '../../assets/Ac repair.jpg'
