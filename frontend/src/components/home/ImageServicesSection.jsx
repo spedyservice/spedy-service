@@ -17,12 +17,12 @@ const ImageServicesSection = () => {
   const navigate = useNavigate()
 
   return (
-    <section className="py-6 md:py-10 bg-[#ece9cb] px-4 sm:px-6">
+    <section className="py-6 md:py-10 bg-[#0617af] px-4 sm:px-6">
       <div className="max-w-[1100px] mx-auto">
 
         {/* HEADER */}
         <div className="flex items-center justify-between mb-5 md:mb-10">
-          <h2 className="text-xl md:text-3xl lg:text-4xl font-extrabold text-gray-900">
+          <h2 className="text-xl md:text-3xl lg:text-4xl font-extrabold text-white">
             Our Best Services
           </h2>
           <Link
@@ -138,7 +138,7 @@ const ImageServicesSection = () => {
                     <div key={i} className="w-6 h-6 rounded-full bg-gray-300 border-2 border-white flex items-center justify-center text-[10px] font-bold text-gray-600">👤</div>
                   ))}
                 </div>
-                <span className="text-xs font-semibold text-gray-700">460+ workers</span>
+                
               </div>
               <h3 className="text-xl font-bold text-gray-900 mb-2">Refrigerator Repair</h3>
               <p className="text-sm text-gray-500 mb-4">Professional refrigerator repair for cooling and performance issues.</p>
