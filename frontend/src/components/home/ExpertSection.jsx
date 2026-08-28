@@ -1,17 +1,30 @@
 import React from 'react'
 import owner4 from '../../assets/owner image 4.jpeg'
 
-/* Centrale Sans 700 must be loaded:
-   <link href="https://fonts.googleapis.com/css2?family=Centrale+Sans:wght@700&display=swap" rel="stylesheet"> */
+const videoSrc = 'https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260815_032550_4c49689d-a215-41e0-bb76-8ef78f562429.mp4'
 
 const ExpertSection = () => {
   const titleClass = "text-2xl sm:text-3xl font-bold text-gray-900"
 
   return (
-    <section className="py-6 md:py-8 bg-gray-50">
-      <div className="container-custom">
+    <section className="relative py-6 md:py-8 overflow-hidden bg-white">
+      {/* Background video – fills entire section, full opacity */}
+      <div className="absolute inset-0 w-full h-full">
+        <video
+          src={videoSrc}
+          poster={owner4}
+          autoPlay
+          muted
+          loop
+          playsInline
+          className="w-full h-full object-cover"
+        />
+        {/* Light overlay to keep text readable – reduced opacity */}
+        <div className="absolute inset-0 bg-white/10" />
+      </div>
 
-        {/* ──────── MOBILE LAYOUT (unchanged) ──────── */}
+      <div className="container-custom relative z-10">
+        {/* Mobile layout */}
         <div className="md:hidden space-y-4">
           <h2 className={titleClass} style={{ fontFamily: "'Centrale Sans', sans-serif", fontWeight: 700 }}>
             Meet Our Technician
@@ -27,16 +40,14 @@ const ExpertSection = () => {
             </p>
           </div>
 
-          {/* Main image */}
           <div className="rounded-xl overflow-hidden shadow-lg">
-            <img src={owner4} alt="Habibur Rahaman Mondal – expert technician" className="w-full h-60 object-cover" />
+            <img src={owner4} alt="Habibur Rahaman Mondal" className="w-full h-60 object-cover" />
           </div>
 
-          <p className="text-gray-600 text-sm leading-relaxed">
+          <p className="text-gray-700 text-sm leading-relaxed">
             With <strong>12+ years of hands‑on experience</strong>, Sunny personally services appliances at your doorstep. From compressors to circuit boards, he’s the expert behind every reliable repair.
           </p>
 
-          {/* Stats */}
           <div className="flex flex-wrap gap-3 text-sm text-gray-700">
             <span className="flex items-center gap-1.5"><span className="w-2 h-2 bg-green-500 rounded-full" /> Certified Professional</span>
             <span className="flex items-center gap-1.5"><span className="w-2 h-2 bg-green-500 rounded-full" /> 12+ Years Experience</span>
@@ -44,9 +55,8 @@ const ExpertSection = () => {
           </div>
         </div>
 
-        {/* ──────── DESKTOP LAYOUT (compact) ──────── */}
+        {/* Desktop layout */}
         <div className="hidden md:flex items-start gap-6 lg:gap-8">
-          {/* Text column */}
           <div className="flex-1">
             <h2 className={titleClass} style={{ fontFamily: "'Centrale Sans', sans-serif", fontWeight: 700 }}>
               Meet Our Technician
@@ -63,7 +73,7 @@ const ExpertSection = () => {
               Head Technician & Founder
             </p>
 
-            <p className="text-gray-600 text-sm sm:text-base leading-relaxed mt-3 max-w-md">
+            <p className="text-gray-700 text-sm sm:text-base leading-relaxed mt-3 max-w-md">
               With <strong>12+ years of hands‑on experience</strong>, Sunny personally services appliances at your doorstep. From compressors to circuit boards, he’s the expert behind every reliable repair.
             </p>
 
@@ -74,19 +84,12 @@ const ExpertSection = () => {
             </div>
           </div>
 
-          {/* Image column – fixed smaller height */}
           <div className="w-[35%] lg:w-[30%] flex-shrink-0">
-            <div className="rounded-xl overflow-hidden shadow-lg" style={{ maxHeight: '360px' }}>
-              <img
-                src={owner4}
-                alt="Habibur Rahaman Mondal"
-                className="w-full h-auto max-h-[360px] object-cover"
-                style={{ maxHeight: '360px' }}
-              />
+            <div className="rounded-xl overflow-hidden shadow-lg">
+              <img src={owner4} alt="Habibur Rahaman Mondal" className="w-full h-auto max-h-[360px] object-cover" style={{ maxHeight: '360px' }} />
             </div>
           </div>
         </div>
-
       </div>
     </section>
   )

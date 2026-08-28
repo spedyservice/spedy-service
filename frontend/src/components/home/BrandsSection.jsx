@@ -9,13 +9,14 @@ const BrandsSection = () => {
     const fetchBrands = async () => {
       try {
         const response = await brandService.getAllBrands({ isActive: true })
+        console.log('✅ Brands fetched:', response)
         if (response.success && response.data.length > 0) {
           setBrands(response.data)
         } else {
           setFallbackBrands()
         }
       } catch (error) {
-        console.error('Error fetching brands:', error)
+        console.error('❌ Error fetching brands:', error)
         setFallbackBrands()
       } finally {
         setLoading(false)
@@ -33,82 +34,90 @@ const BrandsSection = () => {
     setBrands(fallbackNames.map(name => ({ name, logo: '' })))
   }
 
+  const marqueeItems = [...brands, ...brands]
+
   if (loading) {
     return (
-      <section className="py-10 bg-gray-500">
-        <div className="container-custom text-center">
-          <div className="inline-block w-10 h-10 border-4 border-orange-500 border-t-transparent rounded-full animate-spin"></div>
-        </div>
+      <section className="w-full bg-[#000000] py-[80px] flex justify-center items-center">
+        <div className="inline-block w-10 h-10 border-4 border-white border-t-transparent rounded-full animate-spin"></div>
       </section>
     )
   }
 
-  const marqueeItems = [...brands, ...brands]
+  if (brands.length === 0) return null
 
   return (
-    <section className="py-10 md:py-12 bg-[#eff6cc]">
-      <div className="container-custom">
-        {/* Header – left aligned, smaller title, no description */}
-        <div className="mb-6 md:mb-8 text-left">
-          <h2 className="text-lg sm:text-xl font-bold text-gray-900">
-            Available Brands
-          </h2>
-        </div>
+    <section className="w-full bg-[#000000] py-[80px] overflow-hidden select-none relative">
+      <div className="max-w-[1200px] mx-auto relative z-10 px-4">
+        <h2
+          className="text-[#FFFFFF] text-center text-[18px] font-medium leading-[140%] mb-[60px]"
+          style={{ fontFamily: "'Inter', sans-serif" }}
+        >
+          Trusted by 90+ Brands
+        </h2>
 
-        {/* Marquee wrapper */}
-        <div className="overflow-hidden group">
-          <div className="flex gap-6 sm:gap-8 animate-marquee group-hover:[animation-play-state:paused]">
-            {marqueeItems.map((brand, index) => (
-              <div
-                key={`${brand.name}-${index}`}
-                className="flex-shrink-0 flex flex-col items-center justify-center bg-white rounded-xl shadow-sm border border-gray-200 hover:border-orange-400 hover:shadow-md transition-all duration-200 p-3 sm:p-4 w-32 sm:w-40"
-              >
-                <BrandLogo brand={brand} />
-                <span className="text-xs sm:text-sm font-medium text-gray-700 mt-2 text-center leading-tight whitespace-nowrap">
-                  {brand.name}
-                </span>
-              </div>
-            ))}
+        <div className="marquee-container relative flex overflow-hidden group [mask-image:linear-gradient(to_right,transparent,black_15%,black_85%,transparent)]">
+          <div className="marquee-content flex shrink-0 gap-[80px] min-w-full">
+            {marqueeItems.map((brand, index) => {
+              const hasLogo = brand.logo && brand.logo.trim() !== ''
+              return (
+                <div
+                  key={`${brand.name}-${index}`}
+                  className="flex-shrink-0 flex items-center justify-center"
+                >
+                  {hasLogo ? (
+                    <img
+                      src={brand.logo}
+                      alt={brand.name}
+                      className="h-[32px] w-auto object-contain opacity-80 hover:opacity-100 transition-opacity duration-300 cursor-pointer"
+                      onError={(e) => {
+                        e.target.style.display = 'none'
+                        const parent = e.target.parentElement
+                        const fallback = document.createElement('span')
+                        fallback.className = 'text-white text-base font-medium opacity-80 hover:opacity-100 transition-opacity duration-300 cursor-pointer whitespace-nowrap'
+                        fallback.textContent = brand.name
+                        parent.appendChild(fallback)
+                      }}
+                    />
+                  ) : (
+                    <span className="text-white text-base font-medium opacity-80 hover:opacity-100 transition-opacity duration-300 cursor-pointer whitespace-nowrap">
+                      {brand.name}
+                    </span>
+                  )}
+                </div>
+              )
+            })}
           </div>
         </div>
       </div>
 
       <style>{`
-        @keyframes marquee {
-          0%   { transform: translateX(0); }
-          100% { transform: translateX(-50%); }
+        @keyframes marquee-scroll {
+          from { transform: translateX(0); }
+          to { transform: translateX(calc(-50% - 40px)); }
         }
-        .animate-marquee {
-          animation: marquee 40s linear infinite;
-          width: max-content;
+        .marquee-content {
+          animation: marquee-scroll 30s linear infinite;
           will-change: transform;
+        }
+        .marquee-container:hover .marquee-content {
+          animation-play-state: paused;
+        }
+
+        @media (max-width: 768px) {
+          .marquee-content {
+            gap: 40px;
+          }
+          .marquee-content {
+            animation-duration: 20s;
+          }
+          @keyframes marquee-scroll {
+            from { transform: translateX(0); }
+            to { transform: translateX(calc(-50% - 20px)); }
+          }
         }
       `}</style>
     </section>
-  )
-}
-
-/**
- * Renders brand logo or initial fallback.
- */
-const BrandLogo = ({ brand }) => {
-  const [imgError, setImgError] = useState(false)
-
-  return (
-    <div className="flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center">
-      {brand.logo && !imgError ? (
-        <img
-          src={brand.logo}
-          alt={brand.name}
-          className="w-full h-full object-contain"
-          onError={() => setImgError(true)}
-        />
-      ) : (
-        <div className="w-full h-full bg-orange-100 rounded-full flex items-center justify-center text-orange-600 font-bold text-lg sm:text-xl">
-          {brand.name.charAt(0).toUpperCase()}
-        </div>
-      )}
-    </div>
   )
 }
 

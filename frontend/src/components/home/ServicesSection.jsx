@@ -4,7 +4,56 @@ import { FaArrowRight, FaChevronLeft, FaChevronRight } from 'react-icons/fa'
 import serviceService from '../../services/serviceService'
 import ServiceCard from '../common/ServiceCard'
 
-const BG_HEX = '#073bb4'
+// ── New dark theme background ──
+const BG_HEX = '#030014'
+
+// ── Spotlight Glow wrapper (inline component, no extra files) ──
+const SpotlightCard = ({ children, className = '', spotlightColor = 'rgba(204, 255, 0, 0.12)' }) => {
+  const cardRef = useRef(null)
+  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
+  const [isHovered, setIsHovered] = useState(false)
+
+  useEffect(() => {
+    const element = cardRef.current
+    if (!element) return
+
+    const handleMouseMove = (e) => {
+      const rect = element.getBoundingClientRect()
+      setMousePosition({
+        x: e.clientX - rect.left,
+        y: e.clientY - rect.top,
+      })
+    }
+    const handleMouseEnter = () => setIsHovered(true)
+    const handleMouseLeave = () => setIsHovered(false)
+
+    element.addEventListener('mousemove', handleMouseMove)
+    element.addEventListener('mouseenter', handleMouseEnter)
+    element.addEventListener('mouseleave', handleMouseLeave)
+
+    return () => {
+      element.removeEventListener('mousemove', handleMouseMove)
+      element.removeEventListener('mouseenter', handleMouseEnter)
+      element.removeEventListener('mouseleave', handleMouseLeave)
+    }
+  }, [])
+
+  return (
+    <div
+      ref={cardRef}
+      className={`relative overflow-hidden transition-all duration-300 ${className}`}
+    >
+      <div
+        className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-500 ease-in-out"
+        style={{
+          opacity: isHovered ? 1 : 0,
+          background: `radial-gradient(circle at ${mousePosition.x}px ${mousePosition.y}px, ${spotlightColor}, transparent 70%)`,
+        }}
+      />
+      <div className="relative z-10">{children}</div>
+    </div>
+  )
+}
 
 const ServicesSection = () => {
   const [services, setServices] = useState([])
@@ -107,25 +156,31 @@ const ServicesSection = () => {
 
   if (services.length === 0) return null
 
-  // 🔥 NO SLICE – show ALL services
   const totalSlides = services.length
 
   return (
     <section className="py-10 sm:py-14 overflow-hidden" style={{ backgroundColor: BG_HEX }}>
-      <div className="container-custom">
+      <div className="container-custom max-w-7xl mx-auto px-4">
+        {/* Header – with accent glow */}
         <div className="flex items-end justify-between mb-6 sm:mb-8">
-          <h2 className="text-xl sm:text-2xl md:text-3xl font-extrabold text-white">Our Services</h2>
+          <div>
+            <h2 className="text-xl sm:text-2xl md:text-3xl font-extrabold text-white tracking-tight">
+              Our <span className="text-[#CCFF00]">Services</span>
+            </h2>
+           
+          </div>
           {totalSlides > 8 && (
-            <Link to="/services" className="inline-flex items-center gap-1.5 text-white hover:text-blue-700 font-semibold text-sm whitespace-nowrap transition-colors">
+            <Link to="/services" className="inline-flex items-center gap-1.5 text-white/80 hover:text-[#CCFF00] font-semibold text-sm whitespace-nowrap transition-colors border-b border-transparent hover:border-[#CCFF00] pb-0.5">
               View All <FaArrowRight className="text-xs" />
             </Link>
           )}
         </div>
 
+        {/* Carousel with Spotlight Cards */}
         <div className="relative">
           <button
             onClick={() => scroll('left')}
-            className="absolute left-0 top-1/2 -translate-y-1/2 z-10 hidden md:flex items-center justify-center w-9 h-9 bg-white rounded-full shadow-md border border-gray-200 text-gray-700 hover:text-blue-600 transition-colors"
+            className="absolute left-0 top-1/2 -translate-y-1/2 z-10 hidden md:flex items-center justify-center w-10 h-10 bg-[#0a0a1a] border border-white/10 rounded-full shadow-lg text-white/70 hover:text-[#CCFF00] hover:border-[#CCFF00] transition-colors duration-200"
             aria-label="Scroll left"
           >
             <FaChevronLeft className="text-sm" />
@@ -141,27 +196,35 @@ const ServicesSection = () => {
                 key={service._id}
                 className="snap-start flex-shrink-0 w-[70vw] sm:w-[45vw] md:w-[30vw] lg:w-[22vw] xl:w-[20vw]"
               >
-                <ServiceCard service={service} />
+                <SpotlightCard
+                  className="h-full rounded-2xl bg-white/5 backdrop-blur-sm border border-white/5 hover:border-[#CCFF00]/30 transition-all duration-300"
+                  spotlightColor="rgba(204, 255, 0, 0.10)"
+                >
+                  <ServiceCard service={service} />
+                </SpotlightCard>
               </div>
             ))}
           </div>
 
           <button
             onClick={() => scroll('right')}
-            className="absolute right-0 top-1/2 -translate-y-1/2 z-10 hidden md:flex items-center justify-center w-9 h-9 bg-white rounded-full shadow-md border border-gray-200 text-gray-700 hover:text-blue-600 transition-colors"
+            className="absolute right-0 top-1/2 -translate-y-1/2 z-10 hidden md:flex items-center justify-center w-10 h-10 bg-[#0a0a1a] border border-white/10 rounded-full shadow-lg text-white/70 hover:text-[#CCFF00] hover:border-[#CCFF00] transition-colors duration-200"
             aria-label="Scroll right"
           >
             <FaChevronRight className="text-sm" />
           </button>
         </div>
 
+        {/* Dots – with accent glow */}
         <div className="flex justify-center gap-1.5 mt-4 sm:mt-5">
           {Array.from({ length: totalSlides }).map((_, i) => (
             <button
               key={i}
               onClick={() => goToSlide(i)}
-              className={`w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full transition-colors ${
-                i === activeIndex ? 'bg-blue-600' : 'bg-gray-300 hover:bg-gray-400'
+              className={`w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full transition-all duration-300 ${
+                i === activeIndex
+                  ? 'bg-[#CCFF00] w-6 sm:w-8 shadow-[0_0_12px_rgba(204,255,0,0.5)]'
+                  : 'bg-white/20 hover:bg-white/40'
               }`}
               aria-label={`Go to slide ${i + 1}`}
             />

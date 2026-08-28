@@ -37,7 +37,6 @@ const Hero = () => {
     } catch (err) {
       console.error('Error fetching banners:', err)
       setError(err.message || 'Failed to load banners')
-      // Auto‑retry once after 3 seconds
       if (fetchAttempts.current === 0) {
         fetchAttempts.current = 1
         setTimeout(() => fetchBanners(true), 3000)
@@ -51,7 +50,6 @@ const Hero = () => {
     fetchBanners()
   }, [fetchBanners])
 
-  // Preload the image for the current slide
   useEffect(() => {
     if (banners.length === 0) return
     const current = banners[currentSlide]
@@ -80,7 +78,6 @@ const Hero = () => {
     }
   }, [currentSlide, banners, isMobile, displayedImage])
 
-  // Auto‑slide
   useEffect(() => {
     if (banners.length <= 1) return
     const id = setInterval(() => setCurrentSlide((prev) => (prev + 1) % banners.length), 5000)
@@ -94,8 +91,8 @@ const Hero = () => {
   if (loading) {
     return (
       <section className="pt-[72px] md:pt-[80px] pb-2">
-        <div className="max-w-[1260px] mx-auto px-4 sm:px-6">
-          <div className="rounded-xl bg-gray-200 animate-pulse h-[250px] sm:h-[400px] flex items-center justify-center">
+        <div className="w-full">
+          <div className="bg-gray-200 animate-pulse h-[250px] sm:h-[400px] flex items-center justify-center">
             <FaSpinner className="animate-spin w-10 h-10 text-blue-600" />
           </div>
         </div>
@@ -106,8 +103,8 @@ const Hero = () => {
   if (error) {
     return (
       <section className="pt-[72px] md:pt-[80px] pb-2">
-        <div className="max-w-[1260px] mx-auto px-4 sm:px-6">
-          <div className="rounded-xl bg-gray-100 h-[250px] sm:h-[400px] flex flex-col items-center justify-center gap-4">
+        <div className="w-full">
+          <div className="bg-gray-100 h-[250px] sm:h-[400px] flex flex-col items-center justify-center gap-4">
             <p className="text-red-600 text-sm">⚠️ {error}</p>
             <button
               onClick={() => fetchBanners(true)}
@@ -127,67 +124,65 @@ const Hero = () => {
   const showButton = current.buttonText && current.buttonText.trim().length > 0
 
   return (
-    <section className="pt-[45px] md:pt-[50px] pb-2">
-      <div className="max-w-[1260px] mx-auto px-4 sm:px-6">
-        <div className="relative rounded-xl overflow-hidden shadow-lg">
-          <div className="relative w-full" style={{ minHeight: '250px', maxHeight: '500px' }}>
-            {displayedImage && (
-              <img
-                src={displayedImage}
-                alt={current.title || ''}
-                className="w-full object-cover transition-opacity duration-700 ease-in-out"
-                style={{ minHeight: '250px', maxHeight: '500px', opacity: 1 }}
-              />
-            )}
-          </div>
-
-          {showButton && (
-            <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent pointer-events-none" />
-          )}
-          {showButton && (
-            <div className="absolute bottom-4 md:bottom-6 left-0 right-0 flex justify-center z-10">
-              <Link
-                to={current.buttonLink || '/shop'}
-                className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-bold px-4 py-2 md:px-6 md:py-3 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 text-xs sm:text-base"
-              >
-                {current.buttonText}
-              </Link>
-            </div>
-          )}
-
-          {banners.length > 1 && (
-            <>
-              <button
-                onClick={prev}
-                className="absolute left-2 sm:left-5 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white text-gray-800 w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center shadow-lg transition"
-              >
-                <FaChevronLeft size={14} className="sm:w-4 sm:h-4" />
-              </button>
-              <button
-                onClick={next}
-                className="absolute right-2 sm:right-5 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white text-gray-800 w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center shadow-lg transition"
-              >
-                <FaChevronRight size={14} className="sm:w-4 sm:h-4" />
-              </button>
-            </>
-          )}
-
-          {banners.length > 1 && (
-            <div className="absolute bottom-14 md:bottom-16 left-0 right-0 flex justify-center gap-2 z-20">
-              {banners.map((_, i) => (
-                <button
-                  key={i}
-                  onClick={() => goToSlide(i)}
-                  className={`transition-all duration-300 rounded-full ${
-                    i === currentSlide
-                      ? 'w-7 h-2 bg-blue-600'
-                      : 'w-2 h-2 bg-gray-300 hover:bg-gray-500'
-                  }`}
-                />
-              ))}
-            </div>
+    <section className="pt-[45px] md:pt-[50px] pb-2 w-full">
+      <div className="relative w-full overflow-hidden">
+        <div className="relative w-full" style={{ minHeight: '250px', maxHeight: '500px' }}>
+          {displayedImage && (
+            <img
+              src={displayedImage}
+              alt={current.title || ''}
+              className="w-full h-full object-cover transition-opacity duration-700 ease-in-out"
+              style={{ minHeight: '250px', maxHeight: '500px', opacity: 1 }}
+            />
           )}
         </div>
+
+        {showButton && (
+          <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent pointer-events-none" />
+        )}
+        {showButton && (
+          <div className="absolute bottom-4 md:bottom-6 left-0 right-0 flex justify-center z-10">
+            <Link
+              to={current.buttonLink || '/shop'}
+              className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-bold px-4 py-2 md:px-6 md:py-3 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 text-xs sm:text-base"
+            >
+              {current.buttonText}
+            </Link>
+          </div>
+        )}
+
+        {banners.length > 1 && (
+          <>
+            <button
+              onClick={prev}
+              className="absolute left-2 sm:left-5 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white text-gray-800 w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center shadow-lg transition z-10"
+            >
+              <FaChevronLeft size={14} className="sm:w-4 sm:h-4" />
+            </button>
+            <button
+              onClick={next}
+              className="absolute right-2 sm:right-5 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white text-gray-800 w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center shadow-lg transition z-10"
+            >
+              <FaChevronRight size={14} className="sm:w-4 sm:h-4" />
+            </button>
+          </>
+        )}
+
+        {banners.length > 1 && (
+          <div className="absolute bottom-14 md:bottom-16 left-0 right-0 flex justify-center gap-2 z-20">
+            {banners.map((_, i) => (
+              <button
+                key={i}
+                onClick={() => goToSlide(i)}
+                className={`transition-all duration-300 rounded-full ${
+                  i === currentSlide
+                    ? 'w-7 h-2 bg-blue-600'
+                    : 'w-2 h-2 bg-gray-300 hover:bg-gray-500'
+                }`}
+              />
+            ))}
+          </div>
+        )}
       </div>
     </section>
   )

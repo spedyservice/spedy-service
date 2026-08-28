@@ -30,26 +30,26 @@ const HomePage = () => {
       <Hero />
       <TrustFeatures />
 
-      {/* Tabs */}
-      <div className="bg-blue-800 py-4">
+      {/* Tabs - improved visibility */}
+      <div className="bg-blue-800 py-4 border-b border-blue-700">
         <div className="container-custom max-w-7xl mx-auto px-4 sm:px-6">
-          <div className="flex justify-center gap-3">
+          <div className="flex justify-center gap-2 sm:gap-3">
             <button
               onClick={() => setActiveTab('service')}
-              className={`px-6 py-2 rounded-md font-semibold text-base transition-all ${
+              className={`px-6 py-2.5 rounded-lg font-semibold text-sm sm:text-base transition-all duration-200 ${
                 activeTab === 'service'
-                  ? 'bg-white text-black shadow-md'
-                  : 'bg-transparent text-white hover:bg-gray-900 hover:text-blue-400'
+                  ? 'bg-white text-blue-800 shadow-lg'
+                  : 'bg-blue-700/50 text-white hover:bg-blue-600/70 border border-white/20'
               }`}
             >
               🔧 Service
             </button>
             <button
               onClick={() => setActiveTab('sells')}
-              className={`px-6 py-2 rounded-md font-semibold text-base transition-all ${
+              className={`px-6 py-2.5 rounded-lg font-semibold text-sm sm:text-base transition-all duration-200 ${
                 activeTab === 'sells'
-                  ? 'bg-white text-black shadow-md'
-                  : 'bg-transparent text-white hover:bg-gray-900 hover:text-blue-400'
+                  ? 'bg-white text-blue-800 shadow-lg'
+                  : 'bg-blue-700/50 text-white hover:bg-blue-600/70 border border-white/20'
               }`}
             >
               🛒 Sells
@@ -99,7 +99,6 @@ const HomePage = () => {
         <WhyChooseUs />
       </Suspense>
 
-      {/* ✅ Testimonials — after WhyChooseUs, before footer */}
       <Suspense fallback={<SectionLoader />}>
         <Testimonials />
       </Suspense>

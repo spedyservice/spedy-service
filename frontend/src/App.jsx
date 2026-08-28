@@ -26,9 +26,13 @@ const CartPage = lazy(() => import('./pages/CartPage'));
 const CheckoutPage = lazy(() => import('./pages/CheckoutPage'));
 const OrderConfirmationPage = lazy(() => import('./pages/OrderConfirmationPage'));
 
+
+
 // Import these normally to avoid dynamic chunk errors
 import MyBookingsPage from './pages/MyBookingsPage';
 import MyOrdersPage from './pages/MyOrdersPage';
+import WhatsAppButton from './components/common/WhatsAppButton'
+
 
 // Admin pages (lazy)
 const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard'));
@@ -406,6 +410,7 @@ function App() {
       </main>
       {!shouldHideNavbarFooter && !hideFooter && <Footer />}
       <PopupBanner />
+      <WhatsAppButton />
     </div>
   );
 }
