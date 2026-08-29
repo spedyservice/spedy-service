@@ -10,6 +10,7 @@ const Hero = () => {
   const [error, setError] = useState(null)
   const [isMobile, setIsMobile] = useState(false)
   const [displayedImage, setDisplayedImage] = useState(null)
+  const [imageLoaded, setImageLoaded] = useState(false)
   const preloadRef = useRef(null)
   const fetchAttempts = useRef(0)
 
@@ -23,6 +24,7 @@ const Hero = () => {
   const fetchBanners = useCallback(async (retry = false) => {
     setError(null)
     if (!retry) setLoading(true)
+    setImageLoaded(false)
     try {
       const response = await bannerService.getBanners()
       if (response.success && response.data.length > 0) {
@@ -31,18 +33,29 @@ const Hero = () => {
         const img = isMobile && first.mobileImage ? first.mobileImage : first.desktopImage
         setDisplayedImage(img)
         fetchAttempts.current = 0
+
+        const preloadImg = new Image()
+        preloadImg.src = img
+        preloadImg.onload = () => {
+          setImageLoaded(true)
+          setLoading(false)
+        }
+        preloadImg.onerror = () => {
+          setImageLoaded(true)
+          setLoading(false)
+        }
+        preloadRef.current = preloadImg
       } else {
         throw new Error('No banners available')
       }
     } catch (err) {
       console.error('Error fetching banners:', err)
       setError(err.message || 'Failed to load banners')
+      setLoading(false)
       if (fetchAttempts.current === 0) {
         fetchAttempts.current = 1
         setTimeout(() => fetchBanners(true), 3000)
       }
-    } finally {
-      setLoading(false)
     }
   }, [isMobile])
 
@@ -50,34 +63,40 @@ const Hero = () => {
     fetchBanners()
   }, [fetchBanners])
 
+  // ✅ NEW: Update displayedImage when slide changes
   useEffect(() => {
     if (banners.length === 0) return
     const current = banners[currentSlide]
-    const nextImage = isMobile && current.mobileImage ? current.mobileImage : current.desktopImage
-    if (displayedImage === nextImage) return
-
-    const img = new Image()
-    img.src = nextImage
-    preloadRef.current = img
-
-    img.onload = () => {
-      setDisplayedImage(nextImage)
-      preloadRef.current = null
-    }
-    img.onerror = () => {
-      setDisplayedImage(nextImage)
-      preloadRef.current = null
-    }
-
-    return () => {
-      if (preloadRef.current) {
-        preloadRef.current.onload = null
-        preloadRef.current.onerror = null
-        preloadRef.current = null
-      }
+    const img = isMobile && current.mobileImage ? current.mobileImage : current.desktopImage
+    if (img && img !== displayedImage) {
+      setDisplayedImage(img)
     }
   }, [currentSlide, banners, isMobile, displayedImage])
 
+  // ✅ Preload the next image (unchanged – works with the new effect)
+  useEffect(() => {
+    if (banners.length === 0 || !displayedImage) return
+    const nextIndex = (currentSlide + 1) % banners.length
+    const nextBanner = banners[nextIndex]
+    const nextImage = isMobile && nextBanner.mobileImage ? nextBanner.mobileImage : nextBanner.desktopImage
+    if (nextImage && nextImage !== displayedImage) {
+      const img = new Image()
+      img.src = nextImage
+    }
+  }, [currentSlide, banners, isMobile, displayedImage])
+
+  // ✅ Preload the image when displayedImage changes (unchanged)
+  useEffect(() => {
+    if (!displayedImage) return
+    setImageLoaded(false)
+    const img = new Image()
+    img.src = displayedImage
+    img.onload = () => setImageLoaded(true)
+    img.onerror = () => setImageLoaded(true)
+    preloadRef.current = img
+  }, [displayedImage])
+
+  // Auto‑play interval (unchanged)
   useEffect(() => {
     if (banners.length <= 1) return
     const id = setInterval(() => setCurrentSlide((prev) => (prev + 1) % banners.length), 5000)
@@ -88,7 +107,8 @@ const Hero = () => {
   const prev = () => setCurrentSlide((s) => (s - 1 + banners.length) % banners.length)
   const next = () => setCurrentSlide((s) => (s + 1) % banners.length)
 
-  if (loading) {
+  // Skeleton while loading or image not ready
+  if (loading || !imageLoaded) {
     return (
       <section className="pt-[72px] md:pt-[80px] pb-2">
         <div className="w-full">
