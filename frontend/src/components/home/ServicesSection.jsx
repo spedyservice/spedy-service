@@ -4,10 +4,10 @@ import { FaArrowRight, FaChevronLeft, FaChevronRight } from 'react-icons/fa'
 import serviceService from '../../services/serviceService'
 import ServiceCard from '../common/ServiceCard'
 
-// ── New dark theme background ──
-const BG_HEX = '#030014'
+// ── Fallback background colour (shown if video fails) ──
+const FALLBACK_BG = '#030014'
 
-// ── Spotlight Glow wrapper (inline component, no extra files) ──
+// ── Spotlight Glow wrapper (unchanged) ──
 const SpotlightCard = ({ children, className = '', spotlightColor = 'rgba(204, 255, 0, 0.12)' }) => {
   const cardRef = useRef(null)
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
@@ -67,7 +67,6 @@ const ServicesSection = () => {
       try {
         const response = await serviceService.getAllServices({ isActive: true })
         if (response.success && response.data.length > 0) {
-          // Sort: "Other Electronics" at the end
           const sorted = [...response.data].sort((a, b) => {
             if (a.name === 'Other Electronics') return 1
             if (b.name === 'Other Electronics') return -1
@@ -134,7 +133,7 @@ const ServicesSection = () => {
 
   if (loading) {
     return (
-      <section className="py-12" style={{ backgroundColor: BG_HEX }}>
+      <section className="py-12" style={{ backgroundColor: FALLBACK_BG }}>
         <div className="container-custom text-center">
           <div className="inline-block w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
           <p className="mt-3 text-gray-500 text-sm">Loading services...</p>
@@ -145,7 +144,7 @@ const ServicesSection = () => {
 
   if (error) {
     return (
-      <section className="py-12" style={{ backgroundColor: BG_HEX }}>
+      <section className="py-12" style={{ backgroundColor: FALLBACK_BG }}>
         <div className="container-custom text-center">
           <p className="text-red-500 text-sm">Error: {error}</p>
           <button onClick={() => window.location.reload()} className="mt-2 text-blue-600 underline text-sm">Retry</button>
@@ -159,15 +158,31 @@ const ServicesSection = () => {
   const totalSlides = services.length
 
   return (
-    <section className="py-10 sm:py-14 overflow-hidden" style={{ backgroundColor: BG_HEX }}>
-      <div className="container-custom max-w-7xl mx-auto px-4">
+    <section className="py-10 sm:py-14 overflow-hidden relative">
+      {/* Video Background */}
+      <video
+        autoPlay
+        loop
+        muted
+        playsInline
+        className="absolute inset-0 h-full w-full object-cover"
+        src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260622_204103_f607742e-09da-4cf5-bb06-4e67b0a531de.mp4"
+        onError={(e) => {
+          // If video fails, fallback to solid dark background
+          e.target.style.display = 'none'
+        }}
+      />
+      {/* Dark overlay for readability */}
+      <div className="absolute inset-0 bg-black/50" />
+
+      {/* Content (cards, header, etc.) */}
+      <div className="relative z-10 container-custom max-w-7xl mx-auto px-4">
         {/* Header – with accent glow */}
         <div className="flex items-end justify-between mb-6 sm:mb-8">
           <div>
             <h2 className="text-xl sm:text-2xl md:text-3xl font-extrabold text-white tracking-tight">
               Our <span className="text-[#CCFF00]">Services</span>
             </h2>
-           
           </div>
           {totalSlides > 8 && (
             <Link to="/services" className="inline-flex items-center gap-1.5 text-white/80 hover:text-[#CCFF00] font-semibold text-sm whitespace-nowrap transition-colors border-b border-transparent hover:border-[#CCFF00] pb-0.5">
@@ -215,7 +230,7 @@ const ServicesSection = () => {
           </button>
         </div>
 
-        {/* Dots – with accent glow */}
+        {/* Dots */}
         <div className="flex justify-center gap-1.5 mt-4 sm:mt-5">
           {Array.from({ length: totalSlides }).map((_, i) => (
             <button

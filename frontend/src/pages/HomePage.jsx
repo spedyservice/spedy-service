@@ -22,6 +22,9 @@ const SectionLoader = () => (
   </div>
 );
 
+// Video URL for background
+const tabVideoSrc = 'https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260423_084718_72a17915-4964-4059-afcd-22d59399b72e.mp4';
+
 const HomePage = () => {
   const [activeTab, setActiveTab] = useState('service');
 
@@ -30,26 +33,40 @@ const HomePage = () => {
       <Hero />
       <TrustFeatures />
 
-      {/* Tabs - improved visibility */}
-      <div className="bg-blue-700 py-4 border-b border-blue-700">
-        <div className="container-custom max-w-7xl mx-auto px-4 sm:px-6">
+      {/* Tabs with video background */}
+      <div className="relative py-4 border-b border-blue-700 overflow-hidden">
+        {/* Video Background */}
+        <div className="absolute inset-0 w-full h-full">
+          <video
+            src={tabVideoSrc}
+            autoPlay
+            muted
+            loop
+            playsInline
+            className="w-full h-full object-cover"
+          />
+          {/* Dark overlay for readability */}
+          <div className="absolute inset-0 bg-black/50" />
+        </div>
+
+        <div className="container-custom max-w-7xl mx-auto px-4 sm:px-6 relative z-10">
           <div className="flex justify-center gap-2 sm:gap-3">
             <button
               onClick={() => setActiveTab('service')}
-              className={`px-6 py-2.5 rounded-lg font-semibold text-sm sm:text-base transition-all duration-200 ${
+              className={`px-6 py-2.5 rounded-lg font-bold text-sm sm:text-base transition-all duration-200 ${
                 activeTab === 'service'
                   ? 'bg-white text-blue-800 shadow-lg'
-                  : 'bg-blue-700/50 text-white hover:bg-blue-600/70 border border-white/20'
+                  : 'bg-white/10 backdrop-blur-sm text-white hover:bg-white/20 border border-white/30'
               }`}
             >
               🔧 Service
             </button>
             <button
               onClick={() => setActiveTab('sells')}
-              className={`px-6 py-2.5 rounded-lg font-semibold text-sm sm:text-base transition-all duration-200 ${
+              className={`px-6 py-2.5 rounded-lg font-bold text-sm sm:text-base transition-all duration-200 ${
                 activeTab === 'sells'
                   ? 'bg-white text-blue-800 shadow-lg'
-                  : 'bg-blue-700/50 text-white hover:bg-blue-600/70 border border-white/20'
+                  : 'bg-white/10 backdrop-blur-sm text-white hover:bg-white/20 border border-white/30'
               }`}
             >
               🛒 Sells

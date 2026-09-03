@@ -1,12 +1,29 @@
 import React from 'react'
 import { FaPhoneAlt } from 'react-icons/fa'
 
+const videoSrc = 'https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260423_084718_72a17915-4964-4059-afcd-22d59399b72e.mp4'
+
 const CallNowSection = () => {
   const phoneNumber = '+919609337633'
 
   return (
-    <section className="py-8 md:py-12 bg-gradient-to-r from-blue-700 to-blue-800">
-      <div className="container-custom max-w-5xl mx-auto px-4 sm:px-6 text-center">
+    <section className="relative py-8 md:py-12 overflow-hidden bg-black">
+      {/* Video Background */}
+      <div className="absolute inset-0 w-full h-full">
+        <video
+          src={videoSrc}
+          autoPlay
+          muted
+          loop
+          playsInline
+          className="w-full h-full object-cover"
+        />
+        {/* Dark overlay for text readability */}
+        <div className="absolute inset-0 bg-black/50" />
+      </div>
+
+      {/* Content */}
+      <div className="container-custom max-w-5xl mx-auto px-4 sm:px-6 text-center relative z-10">
         <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 md:p-8 shadow-lg border border-white/20">
           <p className="text-white/90 text-sm md:text-base font-bold uppercase tracking-wide mb-2">
             To book a service, call now
