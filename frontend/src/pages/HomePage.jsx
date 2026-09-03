@@ -31,7 +31,7 @@ const HomePage = () => {
       <TrustFeatures />
 
       {/* Tabs - improved visibility */}
-      <div className="bg-blue-800 py-4 border-b border-blue-700">
+      <div className="bg-blue-700 py-4 border-b border-blue-700">
         <div className="container-custom max-w-7xl mx-auto px-4 sm:px-6">
           <div className="flex justify-center gap-2 sm:gap-3">
             <button

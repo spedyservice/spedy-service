@@ -1,18 +1,48 @@
 const Banner = require('../models/Banner');
 const cloudinaryService = require('../config/cloudinary');
 
-// Public – get active banners sorted by displayOrder
+// ──────────────────────────────────────────────
+// Helper: inject Cloudinary transformations
+// ──────────────────────────────────────────────
+function optimizeCloudinaryUrl(url, options = {}) {
+  if (!url || !url.includes('/upload/')) return url;
+
+  const { width = 'auto', quality = 'auto', format = 'auto', dpr = 'auto' } = options;
+  const transformation = `q_${quality},f_${format},w_${width},dpr_${dpr},c_limit`;
+
+  // Insert transformation right after '/upload/'
+  return url.replace('/upload/', `/upload/${transformation}/`);
+}
+
+// ──────────────────────────────────────────────
+// Public – get active banners (optimised URLs)
+// ──────────────────────────────────────────────
 const getBanners = async (req, res) => {
   try {
     const banners = await Banner.find({ isActive: true }).sort('displayOrder');
-    res.json({ success: true, data: banners });
+
+    // Optimise each banner's image URLs
+    const optimisedBanners = banners.map((banner) => {
+      const obj = banner.toObject();
+      if (obj.desktopImage) {
+        obj.desktopImage = optimizeCloudinaryUrl(obj.desktopImage);
+      }
+      if (obj.mobileImage) {
+        obj.mobileImage = optimizeCloudinaryUrl(obj.mobileImage);
+      }
+      return obj;
+    });
+
+    res.json({ success: true, data: optimisedBanners });
   } catch (error) {
     console.error('Get banners error:', error);
     res.status(500).json({ success: false, message: 'Failed to fetch banners' });
   }
 };
 
-// Admin – get all banners (including inactive)
+// ──────────────────────────────────────────────
+// Admin – get all banners (including inactive) – raw URLs (admin doesn't need optimisation)
+// ──────────────────────────────────────────────
 const getAllBanners = async (req, res) => {
   try {
     const banners = await Banner.find().sort('displayOrder');
@@ -23,25 +53,39 @@ const getAllBanners = async (req, res) => {
   }
 };
 
-// Admin – create a banner (upload images via memory)
+// ──────────────────────────────────────────────
+// Admin – create a banner (upload with transformations)
+// ──────────────────────────────────────────────
 const createBanner = async (req, res) => {
   try {
     const bannerData = { ...req.body };
 
-    // Upload desktop image
+    // Upload desktop image with optimisation during upload (optional but recommended)
     if (req.files?.desktopImage) {
       const result = await cloudinaryService.uploadBuffer(
         req.files.desktopImage[0].buffer,
-        { folder: 'mondal-electronics/banners' }
+        {
+          folder: 'mondal-electronics/banners',
+          transformation: [
+            { width: 1920, height: 600, crop: 'fill' },
+            { quality: 'auto:good', fetch_format: 'auto' }
+          ]
+        }
       );
       bannerData.desktopImage = result.url;
     }
 
-    // Upload mobile image (optional)
+    // Upload mobile image with optimisation
     if (req.files?.mobileImage) {
       const result = await cloudinaryService.uploadBuffer(
         req.files.mobileImage[0].buffer,
-        { folder: 'mondal-electronics/banners' }
+        {
+          folder: 'mondal-electronics/banners',
+          transformation: [
+            { width: 750, height: 400, crop: 'fill' },
+            { quality: 'auto:good', fetch_format: 'auto' }
+          ]
+        }
       );
       bannerData.mobileImage = result.url;
     }
@@ -54,7 +98,9 @@ const createBanner = async (req, res) => {
   }
 };
 
-// Admin – update a banner
+// ──────────────────────────────────────────────
+// Admin – update a banner (with optimisation on re‑upload)
+// ──────────────────────────────────────────────
 const updateBanner = async (req, res) => {
   try {
     const banner = await Banner.findById(req.params.id);
@@ -64,14 +110,20 @@ const updateBanner = async (req, res) => {
 
     // Replace desktop image if provided
     if (req.files?.desktopImage) {
-      // Delete old image from Cloudinary
+      // Delete old image
       if (banner.desktopImage) {
         const publicId = banner.desktopImage.split('/').pop().split('.')[0];
         await cloudinaryService.deleteImage(`mondal-electronics/banners/${publicId}`);
       }
       const result = await cloudinaryService.uploadBuffer(
         req.files.desktopImage[0].buffer,
-        { folder: 'mondal-electronics/banners' }
+        {
+          folder: 'mondal-electronics/banners',
+          transformation: [
+            { width: 1920, height: 600, crop: 'fill' },
+            { quality: 'auto:good', fetch_format: 'auto' }
+          ]
+        }
       );
       updateData.desktopImage = result.url;
     }
@@ -84,7 +136,13 @@ const updateBanner = async (req, res) => {
       }
       const result = await cloudinaryService.uploadBuffer(
         req.files.mobileImage[0].buffer,
-        { folder: 'mondal-electronics/banners' }
+        {
+          folder: 'mondal-electronics/banners',
+          transformation: [
+            { width: 750, height: 400, crop: 'fill' },
+            { quality: 'auto:good', fetch_format: 'auto' }
+          ]
+        }
       );
       updateData.mobileImage = result.url;
     }
@@ -97,7 +155,9 @@ const updateBanner = async (req, res) => {
   }
 };
 
+// ──────────────────────────────────────────────
 // Admin – delete a banner
+// ──────────────────────────────────────────────
 const deleteBanner = async (req, res) => {
   try {
     const banner = await Banner.findById(req.params.id);

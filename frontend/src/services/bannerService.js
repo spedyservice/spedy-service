@@ -7,28 +7,36 @@ const bannerService = {
   getBanners: async () => {
     // Try to load from cache
     const cached = localStorage.getItem(CACHE_KEY)
+    let parsedCache = null
     if (cached) {
       try {
-        const { data, timestamp } = JSON.parse(cached)
+        parsedCache = JSON.parse(cached)
+        const { data, timestamp } = parsedCache
         if (Date.now() - timestamp < CACHE_TTL) {
-          // Return cached data – it has the shape { success, data }
+          // ✅ Return cached data immediately (stale-while-revalidate)
+          // Then fetch fresh in background and update cache
+          setTimeout(() => {
+            // Background refresh
+            bannerService._fetchAndCache()
+          }, 0)
           return data
         }
       } catch (e) {
-        // Cache is corrupted – ignore
+        // Cache corrupted – ignore
       }
     }
 
-    // No valid cache – fetch from API
-    const response = await api.get('/banners')
-    // response is already { success, data } because your api interceptor unwraps it
+    // No valid cache – fetch fresh and wait
+    return await bannerService._fetchAndCache()
+  },
 
-    // Store in cache
+  // Internal method to fetch and store
+  _fetchAndCache: async () => {
+    const response = await api.get('/banners')
     localStorage.setItem(CACHE_KEY, JSON.stringify({
       data: response,
       timestamp: Date.now()
     }))
-
     return response
   },
 
@@ -38,7 +46,7 @@ const bannerService = {
 
   createBanner: async (formData) => {
     const response = await api.post('/banners', formData)
-    localStorage.removeItem(CACHE_KEY) // Clear cache so users see new banner
+    localStorage.removeItem(CACHE_KEY)
     return response
   },
 

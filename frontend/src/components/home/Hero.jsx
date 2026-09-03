@@ -10,8 +10,6 @@ const Hero = () => {
   const [error, setError] = useState(null)
   const [isMobile, setIsMobile] = useState(false)
   const [displayedImage, setDisplayedImage] = useState(null)
-  const [imageLoaded, setImageLoaded] = useState(false)
-  const preloadRef = useRef(null)
   const fetchAttempts = useRef(0)
 
   useEffect(() => {
@@ -24,7 +22,6 @@ const Hero = () => {
   const fetchBanners = useCallback(async (retry = false) => {
     setError(null)
     if (!retry) setLoading(true)
-    setImageLoaded(false)
     try {
       const response = await bannerService.getBanners()
       if (response.success && response.data.length > 0) {
@@ -33,18 +30,8 @@ const Hero = () => {
         const img = isMobile && first.mobileImage ? first.mobileImage : first.desktopImage
         setDisplayedImage(img)
         fetchAttempts.current = 0
-
-        const preloadImg = new Image()
-        preloadImg.src = img
-        preloadImg.onload = () => {
-          setImageLoaded(true)
-          setLoading(false)
-        }
-        preloadImg.onerror = () => {
-          setImageLoaded(true)
-          setLoading(false)
-        }
-        preloadRef.current = preloadImg
+        // ✅ Show the image immediately – no waiting for onload
+        setLoading(false)
       } else {
         throw new Error('No banners available')
       }
@@ -63,7 +50,7 @@ const Hero = () => {
     fetchBanners()
   }, [fetchBanners])
 
-  // ✅ NEW: Update displayedImage when slide changes
+  // Update displayedImage when slide changes
   useEffect(() => {
     if (banners.length === 0) return
     const current = banners[currentSlide]
@@ -73,7 +60,7 @@ const Hero = () => {
     }
   }, [currentSlide, banners, isMobile, displayedImage])
 
-  // ✅ Preload the next image (unchanged – works with the new effect)
+  // Preload the next image for smooth transitions
   useEffect(() => {
     if (banners.length === 0 || !displayedImage) return
     const nextIndex = (currentSlide + 1) % banners.length
@@ -85,18 +72,7 @@ const Hero = () => {
     }
   }, [currentSlide, banners, isMobile, displayedImage])
 
-  // ✅ Preload the image when displayedImage changes (unchanged)
-  useEffect(() => {
-    if (!displayedImage) return
-    setImageLoaded(false)
-    const img = new Image()
-    img.src = displayedImage
-    img.onload = () => setImageLoaded(true)
-    img.onerror = () => setImageLoaded(true)
-    preloadRef.current = img
-  }, [displayedImage])
-
-  // Auto‑play interval (unchanged)
+  // Auto‑play
   useEffect(() => {
     if (banners.length <= 1) return
     const id = setInterval(() => setCurrentSlide((prev) => (prev + 1) % banners.length), 5000)
@@ -107,8 +83,8 @@ const Hero = () => {
   const prev = () => setCurrentSlide((s) => (s - 1 + banners.length) % banners.length)
   const next = () => setCurrentSlide((s) => (s + 1) % banners.length)
 
-  // Skeleton while loading or image not ready
-  if (loading || !imageLoaded) {
+  // Skeleton only while fetching data (no image loading wait)
+  if (loading) {
     return (
       <section className="pt-[72px] md:pt-[80px] pb-2">
         <div className="w-full">
@@ -142,6 +118,7 @@ const Hero = () => {
 
   const current = banners[currentSlide]
   const showButton = current.buttonText && current.buttonText.trim().length > 0
+  const isFirstSlide = currentSlide === 0
 
   return (
     <section className="pt-[45px] md:pt-[50px] pb-2 w-full">
@@ -151,6 +128,8 @@ const Hero = () => {
             <img
               src={displayedImage}
               alt={current.title || ''}
+              loading={isFirstSlide ? 'eager' : 'lazy'}
+              fetchPriority={isFirstSlide ? 'high' : 'auto'}
               className="w-full h-full object-cover transition-opacity duration-700 ease-in-out"
               style={{ minHeight: '250px', maxHeight: '500px', opacity: 1 }}
             />
