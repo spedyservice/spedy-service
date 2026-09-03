@@ -9,22 +9,23 @@ import coolerImg from '../../assets/air cooler.webp'
 
 // Video URL for background
 const videoSrc = 'https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260503_144509_89e2d612-8af2-45c3-90f4-4831bc60715d.mp4'
+
+// Framer Motion – reduce animation duration, only animate once
 const fadeUp = {
-  hidden: { opacity: 0, y: 40 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: 'easeOut' } },
+  hidden: { opacity: 0, y: 20 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.4, ease: 'easeOut' } },
 }
 
 const ImageServicesSection = () => {
   const navigate = useNavigate()
 
-  // Font families
   const headingFont = "'Lato', 'Open Sans', sans-serif"
   const bodyFont = "'Open Sans', 'Lato', sans-serif"
   const accentFont = "'Playfair Display', serif"
 
   return (
-    <section className="w-full relative overflow-hidden py-12 md:py-20 bg-black">
-      {/* Video Background */}
+    <section className="w-full relative overflow-hidden py-10 md:py-16 bg-black">
+      {/* Video Background – add preload="metadata" to reduce initial load */}
       <div className="absolute inset-0 w-full h-full">
         <video
           src={videoSrc}
@@ -32,20 +33,21 @@ const ImageServicesSection = () => {
           muted
           loop
           playsInline
+          preload="metadata"
           className="w-full h-full object-cover"
         />
-        {/* Dark overlay for text readability */}
+        {/* Dark overlay – lighter on mobile to save GPU? Actually overlay is cheap */}
         <div className="absolute inset-0 bg-black/50" />
       </div>
 
-      {/* Decorative radials (softened for video) */}
-      <div className="pointer-events-none absolute -top-40 left-1/2 -translate-x-1/2 w-[850px] h-[450px] bg-[#0142b7]/10 rounded-full blur-3xl" />
-      <div className="pointer-events-none absolute top-1/3 -right-32 w-96 h-96 bg-[#d4e0fd]/20 rounded-full blur-3xl" />
-      <div className="pointer-events-none absolute bottom-10 -left-32 w-96 h-96 bg-[#dbe1ff]/15 rounded-full blur-3xl" />
+      {/* Decorative radials – kept but with reduced blur radius on mobile */}
+      <div className="pointer-events-none absolute -top-40 left-1/2 -translate-x-1/2 w-[850px] h-[450px] bg-[#0142b7]/10 rounded-full blur-2xl" />
+      <div className="pointer-events-none absolute top-1/3 -right-32 w-96 h-96 bg-[#d4e0fd]/20 rounded-full blur-2xl" />
+      <div className="pointer-events-none absolute bottom-10 -left-32 w-96 h-96 bg-[#dbe1ff]/15 rounded-full blur-2xl" />
 
       <div className="max-w-[1280px] mx-auto px-4 md:px-12 relative z-10">
-        {/* ── Header (smaller size) ── */}
-        <div className="flex items-center justify-between mb-6 md:mb-12">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-6 md:mb-10">
           <h2
             className="text-2xl md:text-4xl font-black tracking-tight text-white drop-shadow-lg"
             style={{ fontFamily: headingFont }}
@@ -55,7 +57,7 @@ const ImageServicesSection = () => {
           </h2>
           <Link
             to="/services"
-            className="inline-flex items-center gap-2 text-white/90 hover:text-[#0b36b8] font-semibold text-sm md:text-base border-b-2 border-transparent hover:border-[#0b25b8] transition-all duration-300 group"
+            className="inline-flex items-center gap-2 text-white/90 hover:text-[#0b36b8] font-semibold text-sm md:text-base border-b-2 border-transparent hover:border-[#0b25b8] transition-colors duration-200 group"
             style={{ fontFamily: bodyFont }}
           >
             View All
@@ -65,18 +67,19 @@ const ImageServicesSection = () => {
 
         {/* ── MOBILE LAYOUT ── */}
         <div className="md:hidden space-y-4">
-          {/* AC & Fridge – side by side 50/50 */}
+          {/* AC & Fridge – side by side */}
           <div className="flex gap-4">
             {/* AC Card */}
             <motion.div
-              className="flex-1 bg-white/10 backdrop-blur-md rounded-2xl border border-white/20 overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300"
+              className="flex-1 bg-white/10 rounded-2xl border border-white/20 overflow-hidden shadow-lg"
               variants={fadeUp}
               initial="hidden"
               whileInView="visible"
-              viewport={{ once: true }}
+              viewport={{ once: true, amount: 0.2 }}
+              style={{ willChange: 'transform, opacity' }}
             >
               <div className="relative h-36 overflow-hidden">
-                <img src={acImg} alt="AC Service" className="w-full h-full object-cover" />
+                <img src={acImg} alt="AC Service" className="w-full h-full object-cover" loading="lazy" />
                 <span className="absolute top-2 left-2 inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#0142b7] text-white text-[10px] font-bold uppercase tracking-wider shadow-md">
                   <FaFire className="text-[10px]" /> Popular
                 </span>
@@ -88,12 +91,12 @@ const ImageServicesSection = () => {
                 >
                   AC Service & Repair
                 </h4>
-                <p className="text-[11px] text-white/80 leading-relaxed line-clamp-2 drop-shadow" style={{ fontFamily: bodyFont }}>
+                <p className="text-[11px] text-white/80 leading-relaxed line-clamp-2" style={{ fontFamily: bodyFont }}>
                   Cooling diagnostics, deep foam jet cleaning, gas charging, leak repairs, and complete installation.
                 </p>
                 <button
                   onClick={() => navigate('/book-now')}
-                  className="mt-2 w-full bg-[#0142b7] hover:bg-[#003dab] text-white py-1.5 rounded-lg text-xs font-semibold transition shadow-md"
+                  className="mt-2 w-full bg-[#0142b7] hover:bg-[#003dab] text-white py-1.5 rounded-lg text-xs font-semibold transition-colors duration-200 shadow-md"
                   style={{ fontFamily: bodyFont }}
                 >
                   Book Now →
@@ -103,15 +106,16 @@ const ImageServicesSection = () => {
 
             {/* Fridge Card */}
             <motion.div
-              className="flex-1 bg-white/10 backdrop-blur-md rounded-2xl border border-white/20 overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300"
+              className="flex-1 bg-white/10 rounded-2xl border border-white/20 overflow-hidden shadow-lg"
               variants={fadeUp}
               initial="hidden"
               whileInView="visible"
-              viewport={{ once: true }}
+              viewport={{ once: true, amount: 0.2 }}
+              style={{ willChange: 'transform, opacity' }}
             >
               <div className="relative h-36 overflow-hidden">
-                <img src={fridgeImg} alt="Fridge Service" className="w-full h-full object-cover" />
-                <span className="absolute top-2 left-2 px-2 py-0.5 rounded-full bg-white/20 backdrop-blur-sm text-white text-[10px] font-bold border border-white/30 shadow-sm uppercase tracking-wider">
+                <img src={fridgeImg} alt="Fridge Service" className="w-full h-full object-cover" loading="lazy" />
+                <span className="absolute top-2 left-2 px-2 py-0.5 rounded-full bg-white/20 text-white text-[10px] font-bold border border-white/30 shadow-sm uppercase tracking-wider">
                   Cooling Care
                 </span>
               </div>
@@ -122,12 +126,12 @@ const ImageServicesSection = () => {
                 >
                   Refrigerator Service
                 </h4>
-                <p className="text-[11px] text-white/80 leading-relaxed line-clamp-2 drop-shadow" style={{ fontFamily: bodyFont }}>
+                <p className="text-[11px] text-white/80 leading-relaxed line-clamp-2" style={{ fontFamily: bodyFont }}>
                   Compressor diagnostics, cooling coil fixes, gas refilling, thermostat sensor repair.
                 </p>
                 <button
                   onClick={() => navigate('/book-now')}
-                  className="mt-2 w-full bg-[#0142b7] hover:bg-[#003dab] text-white py-1.5 rounded-lg text-xs font-semibold transition shadow-md"
+                  className="mt-2 w-full bg-[#0142b7] hover:bg-[#003dab] text-white py-1.5 rounded-lg text-xs font-semibold transition-colors duration-200 shadow-md"
                   style={{ fontFamily: bodyFont }}
                 >
                   Book Now →
@@ -138,14 +142,15 @@ const ImageServicesSection = () => {
 
           {/* Air Cooler – horizontal card */}
           <motion.div
-            className="bg-white/10 backdrop-blur-md rounded-2xl border border-white/20 overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 flex flex-row"
+            className="bg-white/10 rounded-2xl border border-white/20 overflow-hidden shadow-lg flex flex-row"
             variants={fadeUp}
             initial="hidden"
             whileInView="visible"
-            viewport={{ once: true }}
+            viewport={{ once: true, amount: 0.2 }}
+            style={{ willChange: 'transform, opacity' }}
           >
             <div className="w-1/3 min-h-[120px] overflow-hidden">
-              <img src={coolerImg} alt="Air Cooler Service" className="w-full h-full object-cover" />
+              <img src={coolerImg} alt="Air Cooler Service" className="w-full h-full object-cover" loading="lazy" />
             </div>
             <div className="flex-1 p-3 flex flex-col justify-between">
               <div>
@@ -158,13 +163,13 @@ const ImageServicesSection = () => {
                 >
                   Air Cooler Service
                 </h4>
-                <p className="text-[11px] text-white/80 leading-relaxed line-clamp-2 drop-shadow" style={{ fontFamily: bodyFont }}>
+                <p className="text-[11px] text-white/80 leading-relaxed line-clamp-2" style={{ fontFamily: bodyFont }}>
                   Motor rewinding, honeycomb pad replacement, submersible pump descaling, deep tank disinfection.
                 </p>
               </div>
               <button
                 onClick={() => navigate('/book-now')}
-                className="mt-2 w-full bg-[#0142b7] hover:bg-[#003dab] text-white py-1.5 rounded-lg text-xs font-semibold transition shadow-md"
+                className="mt-2 w-full bg-[#0142b7] hover:bg-[#003dab] text-white py-1.5 rounded-lg text-xs font-semibold transition-colors duration-200 shadow-md"
                 style={{ fontFamily: bodyFont }}
               >
                 Book Now →
@@ -177,11 +182,15 @@ const ImageServicesSection = () => {
         <div className="hidden md:grid grid-cols-12 gap-6">
           {/* AC – spans 8, featured */}
           <motion.div
-            className="md:col-span-8 group bg-white/10 backdrop-blur-md rounded-3xl border border-white/20 overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 flex flex-col md:flex-row"
-            variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true }}
+            className="md:col-span-8 group bg-white/10 backdrop-blur-sm rounded-3xl border border-white/20 overflow-hidden shadow-lg hover:shadow-2xl transition-shadow duration-300 hover:-translate-y-1 flex flex-col md:flex-row"
+            variants={fadeUp}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, amount: 0.2 }}
+            style={{ willChange: 'transform, opacity' }}
           >
             <div className="md:w-1/2 relative overflow-hidden h-64 md:h-auto min-h-[300px]">
-              <img src={acImg} alt="AC Service & Repair" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+              <img src={acImg} alt="AC Service & Repair" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
               <div className="absolute top-4 left-4 z-10">
                 <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#0142b7] text-white text-xs font-bold shadow-md tracking-wider uppercase">
                   <FaFire className="text-xs" /> Most Popular
@@ -201,24 +210,24 @@ const ImageServicesSection = () => {
                 >
                   AC Service & Repair
                 </h3>
-                <p className="text-sm text-white/80 mb-4 leading-relaxed tracking-wide drop-shadow" style={{ fontFamily: bodyFont }}>
+                <p className="text-sm text-white/80 mb-4 leading-relaxed tracking-wide" style={{ fontFamily: bodyFont }}>
                   Cooling diagnostics, deep foam jet cleaning, gas charging, leak repairs, and complete uninstallation/installation.
                 </p>
                 <div className="flex flex-wrap gap-2 mb-4">
-                  <span className="px-3 py-1 rounded-lg bg-white/10 backdrop-blur-sm border border-white/20 text-xs font-medium text-white/90 tracking-wide" style={{ fontFamily: bodyFont }}>
+                  <span className="px-3 py-1 rounded-lg bg-white/10 border border-white/20 text-xs font-medium text-white/90 tracking-wide" style={{ fontFamily: bodyFont }}>
                     • Deep Jet Foam Clean
                   </span>
-                  <span className="px-3 py-1 rounded-lg bg-white/10 backdrop-blur-sm border border-white/20 text-xs font-medium text-white/90 tracking-wide" style={{ fontFamily: bodyFont }}>
+                  <span className="px-3 py-1 rounded-lg bg-white/10 border border-white/20 text-xs font-medium text-white/90 tracking-wide" style={{ fontFamily: bodyFont }}>
                     • Gas Leak Check
                   </span>
-                  <span className="px-3 py-1 rounded-lg bg-white/10 backdrop-blur-sm border border-white/20 text-xs font-medium text-white/90 tracking-wide" style={{ fontFamily: bodyFont }}>
+                  <span className="px-3 py-1 rounded-lg bg-white/10 border border-white/20 text-xs font-medium text-white/90 tracking-wide" style={{ fontFamily: bodyFont }}>
                     • 30-Day Protection
                   </span>
                 </div>
               </div>
               <button
                 onClick={() => navigate('/book-now')}
-                className="mt-4 w-full md:w-auto self-end bg-[#0142b7] hover:bg-[#003dab] text-white px-6 py-2.5 rounded-xl text-sm font-semibold shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02]"
+                className="mt-4 w-full md:w-auto self-end bg-[#0142b7] hover:bg-[#003dab] text-white px-6 py-2.5 rounded-xl text-sm font-semibold shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-[1.02]"
                 style={{ fontFamily: bodyFont }}
               >
                 Book Now →
@@ -228,29 +237,33 @@ const ImageServicesSection = () => {
 
           {/* Fridge – spans 4 */}
           <motion.div
-            className="md:col-span-4 group bg-white/10 backdrop-blur-md rounded-3xl border border-white/20 overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 flex flex-col"
-            variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true }}
+            className="md:col-span-4 group bg-white/10 backdrop-blur-sm rounded-3xl border border-white/20 overflow-hidden shadow-lg hover:shadow-2xl transition-shadow duration-300 hover:-translate-y-1 flex flex-col"
+            variants={fadeUp}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, amount: 0.2 }}
+            style={{ willChange: 'transform, opacity' }}
           >
             <div className="relative overflow-hidden h-56">
-              <img src={fridgeImg} alt="Refrigerator Service" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+              <img src={fridgeImg} alt="Refrigerator Service" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
               <div className="absolute top-4 left-4">
-                <span className="px-3 py-1 rounded-full bg-white/20 backdrop-blur-sm text-white text-xs font-bold border border-white/30 shadow-sm uppercase tracking-wider">Cooling Care</span>
+                <span className="px-3 py-1 rounded-full bg-white/20 text-white text-xs font-bold border border-white/30 shadow-sm uppercase tracking-wider">Cooling Care</span>
               </div>
             </div>
             <div className="p-6 flex flex-col flex-grow">
-              <span className="text-white/70 text-xs font-medium uppercase tracking-wider mb-1 drop-shadow" style={{ fontFamily: bodyFont }}>Single & Double Door</span>
+              <span className="text-white/70 text-xs font-medium uppercase tracking-wider mb-1" style={{ fontFamily: bodyFont }}>Single & Double Door</span>
               <h3
                 className="text-xl font-black text-white mb-2 group-hover:text-[#b8860b] transition-colors tracking-tight drop-shadow"
                 style={{ fontFamily: headingFont }}
               >
                 Refrigerator Service
               </h3>
-              <p className="text-sm text-white/80 mb-4 leading-relaxed flex-grow tracking-wide drop-shadow" style={{ fontFamily: bodyFont }}>
+              <p className="text-sm text-white/80 mb-4 leading-relaxed flex-grow tracking-wide" style={{ fontFamily: bodyFont }}>
                 Comprehensive compressor diagnostics, cooling coil fixes, gas refilling, and thermostat sensor repair.
               </p>
               <button
                 onClick={() => navigate('/book-now')}
-                className="mt-2 w-full bg-[#0142b7] hover:bg-[#003dab] text-white py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 shadow-lg hover:shadow-xl"
+                className="mt-2 w-full bg-[#0142b7] hover:bg-[#003dab] text-white py-2.5 rounded-xl text-sm font-semibold transition-colors duration-200 shadow-lg hover:shadow-xl"
                 style={{ fontFamily: bodyFont }}
               >
                 Book Now →
@@ -260,22 +273,26 @@ const ImageServicesSection = () => {
 
           {/* Air Cooler – spans 12, horizontal */}
           <motion.div
-            className="md:col-span-12 group bg-white/10 backdrop-blur-md rounded-3xl border border-white/20 overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 flex flex-col md:flex-row"
-            variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true }}
+            className="md:col-span-12 group bg-white/10 backdrop-blur-sm rounded-3xl border border-white/20 overflow-hidden shadow-lg hover:shadow-2xl transition-shadow duration-300 hover:-translate-y-1 flex flex-col md:flex-row"
+            variants={fadeUp}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, amount: 0.2 }}
+            style={{ willChange: 'transform, opacity' }}
           >
             <div className="md:w-2/5 relative overflow-hidden h-64 md:h-auto min-h-[220px]">
-              <img src={coolerImg} alt="Air Cooler Service" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+              <img src={coolerImg} alt="Air Cooler Service" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
               <div className="absolute top-4 left-4">
-                <span className="px-3 py-1 rounded-full bg-white/20 backdrop-blur-sm text-white text-xs font-bold border border-white/30 shadow-sm uppercase tracking-wider">Eco Cooling</span>
+                <span className="px-3 py-1 rounded-full bg-white/20 text-white text-xs font-bold border border-white/30 shadow-sm uppercase tracking-wider">Eco Cooling</span>
               </div>
             </div>
             <div className="p-6 md:p-8 md:w-3/5 flex flex-col justify-between">
               <div>
                 <div className="flex items-center justify-between gap-4 mb-2">
-                  <span className="inline-flex items-center gap-1 text-emerald-300 bg-emerald-900/50 px-2.5 py-0.5 rounded-md text-xs font-semibold border border-emerald-500/30 uppercase tracking-wider backdrop-blur-sm">
+                  <span className="inline-flex items-center gap-1 text-emerald-300 bg-emerald-900/50 px-2.5 py-0.5 rounded-md text-xs font-semibold border border-emerald-500/30 uppercase tracking-wider">
                     <span>🌿</span> Eco-Friendly Overhaul
                   </span>
-                  <span className="text-xs font-semibold text-white/70 tracking-wide drop-shadow" style={{ fontFamily: bodyFont }}>Desert & Personal Coolers</span>
+                  <span className="text-xs font-semibold text-white/70 tracking-wide" style={{ fontFamily: bodyFont }}>Desert & Personal Coolers</span>
                 </div>
                 <h3
                   className="text-2xl font-black text-white mb-2 group-hover:text-[#b8860b] transition-colors tracking-tight drop-shadow"
@@ -283,13 +300,13 @@ const ImageServicesSection = () => {
                 >
                   Air Cooler Service
                 </h3>
-                <p className="text-sm text-white/80 mb-4 leading-relaxed tracking-wide drop-shadow" style={{ fontFamily: bodyFont }}>
+                <p className="text-sm text-white/80 mb-4 leading-relaxed tracking-wide" style={{ fontFamily: bodyFont }}>
                   Motor rewinding, honeycomb pad replacement, submersible pump descaling, deep tank disinfection, and seasonal pre-summer tune-ups.
                 </p>
               </div>
               <button
                 onClick={() => navigate('/book-now')}
-                className="mt-4 w-full md:w-auto self-end bg-[#0142b7] hover:bg-[#003dab] text-white px-6 py-2.5 rounded-xl text-sm font-semibold shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02]"
+                className="mt-4 w-full md:w-auto self-end bg-[#0142b7] hover:bg-[#003dab] text-white px-6 py-2.5 rounded-xl text-sm font-semibold shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-[1.02]"
                 style={{ fontFamily: bodyFont }}
               >
                 Book Now →

@@ -4,16 +4,20 @@ import { FaArrowRight, FaChevronLeft, FaChevronRight } from 'react-icons/fa'
 import serviceService from '../../services/serviceService'
 import ServiceCard from '../common/ServiceCard'
 
-// ── Fallback background colour (shown if video fails) ──
+// ── Fallback background colour ──
 const FALLBACK_BG = '#030014'
 
-// ── Spotlight Glow wrapper (unchanged) ──
+// ── Spotlight Glow wrapper – desktop only ──
 const SpotlightCard = ({ children, className = '', spotlightColor = 'rgba(204, 255, 0, 0.12)' }) => {
   const cardRef = useRef(null)
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
   const [isHovered, setIsHovered] = useState(false)
 
+  // Only attach mouse events on desktop
   useEffect(() => {
+    const isDesktop = window.innerWidth >= 768
+    if (!isDesktop) return
+
     const element = cardRef.current
     if (!element) return
 
@@ -41,10 +45,11 @@ const SpotlightCard = ({ children, className = '', spotlightColor = 'rgba(204, 2
   return (
     <div
       ref={cardRef}
-      className={`relative overflow-hidden transition-all duration-300 ${className}`}
+      className={`relative overflow-hidden transition-transform duration-200 hover:-translate-y-1 ${className}`}
+      style={{ willChange: 'transform' }}
     >
       <div
-        className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-500 ease-in-out"
+        className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 ease-in-out"
         style={{
           opacity: isHovered ? 1 : 0,
           background: `radial-gradient(circle at ${mousePosition.x}px ${mousePosition.y}px, ${spotlightColor}, transparent 70%)`,
@@ -158,26 +163,24 @@ const ServicesSection = () => {
   const totalSlides = services.length
 
   return (
-    <section className="py-10 sm:py-14 overflow-hidden relative">
-      {/* Video Background */}
+    <section className="py-10 sm:py-14 overflow-hidden relative bg-black">
+      {/* Video Background – with preload="metadata" */}
       <video
         autoPlay
         loop
         muted
         playsInline
+        preload="metadata"
         className="absolute inset-0 h-full w-full object-cover"
         src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260622_204103_f607742e-09da-4cf5-bb06-4e67b0a531de.mp4"
         onError={(e) => {
-          // If video fails, fallback to solid dark background
           e.target.style.display = 'none'
         }}
       />
-      {/* Dark overlay for readability */}
       <div className="absolute inset-0 bg-black/50" />
 
-      {/* Content (cards, header, etc.) */}
       <div className="relative z-10 container-custom max-w-7xl mx-auto px-4">
-        {/* Header – with accent glow */}
+        {/* Header */}
         <div className="flex items-end justify-between mb-6 sm:mb-8">
           <div>
             <h2 className="text-xl sm:text-2xl md:text-3xl font-extrabold text-white tracking-tight">
@@ -191,7 +194,7 @@ const ServicesSection = () => {
           )}
         </div>
 
-        {/* Carousel with Spotlight Cards */}
+        {/* Carousel */}
         <div className="relative">
           <button
             onClick={() => scroll('left')}
@@ -210,9 +213,10 @@ const ServicesSection = () => {
               <div
                 key={service._id}
                 className="snap-start flex-shrink-0 w-[70vw] sm:w-[45vw] md:w-[30vw] lg:w-[22vw] xl:w-[20vw]"
+                style={{ willChange: 'transform', transform: 'translateZ(0)' }}
               >
                 <SpotlightCard
-                  className="h-full rounded-2xl bg-white/5 backdrop-blur-sm border border-white/5 hover:border-[#CCFF00]/30 transition-all duration-300"
+                  className="h-full rounded-2xl bg-white/5 md:backdrop-blur-sm border border-white/5 hover:border-[#CCFF00]/30 transition-colors duration-200"
                   spotlightColor="rgba(204, 255, 0, 0.10)"
                 >
                   <ServiceCard service={service} />
@@ -236,7 +240,7 @@ const ServicesSection = () => {
             <button
               key={i}
               onClick={() => goToSlide(i)}
-              className={`w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full transition-all duration-300 ${
+              className={`w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full transition-colors duration-200 ${
                 i === activeIndex
                   ? 'bg-[#CCFF00] w-6 sm:w-8 shadow-[0_0_12px_rgba(204,255,0,0.5)]'
                   : 'bg-white/20 hover:bg-white/40'

@@ -32,13 +32,18 @@ const ServiceCard = ({ service }) => {
   const { Icon, bg, color } = config
 
   return (
-    <div className="bg-white rounded-xl shadow-md hover:shadow-xl transition-shadow duration-300 overflow-hidden flex flex-col h-full border border-gray-100">
+    <div
+      className="bg-white rounded-xl shadow-md hover:shadow-xl transition-shadow duration-200 overflow-hidden flex flex-col h-full border border-gray-100"
+      style={{ willChange: 'transform, opacity', transform: 'translateZ(0)' }}
+    >
       {/* Image / fallback icon */}
       <div className="h-36 sm:h-44 overflow-hidden bg-gray-100">
         {service.imageUrl ? (
           <img
             src={service.imageUrl}
             alt={service.name}
+            loading="lazy"
+            decoding="async"
             className="w-full h-full object-cover"
           />
         ) : (
@@ -57,10 +62,9 @@ const ServiceCard = ({ service }) => {
           {service.description || `Professional ${service.name.toLowerCase()} repair service.`}
         </p>
 
-        {/* Book Now button – full width, similar to ADD TO CART style */}
         <Link
           to="/book-now"
-          className="block w-full bg-blue-600 text-white text-xs sm:text-sm font-semibold py-2.5 rounded-lg text-center hover:bg-blue-700 active:scale-95 transition-all shadow-sm mt-auto"
+          className="block w-full bg-blue-600 text-white text-xs sm:text-sm font-semibold py-2.5 rounded-lg text-center hover:bg-blue-700 active:scale-95 transition-all duration-150 shadow-sm mt-auto"
         >
           Book Now
         </Link>

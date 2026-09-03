@@ -30,7 +30,6 @@ const Hero = () => {
         const img = isMobile && first.mobileImage ? first.mobileImage : first.desktopImage
         setDisplayedImage(img)
         fetchAttempts.current = 0
-        // ✅ Show the image immediately – no waiting for onload
         setLoading(false)
       } else {
         throw new Error('No banners available')
@@ -50,7 +49,6 @@ const Hero = () => {
     fetchBanners()
   }, [fetchBanners])
 
-  // Update displayedImage when slide changes
   useEffect(() => {
     if (banners.length === 0) return
     const current = banners[currentSlide]
@@ -60,7 +58,6 @@ const Hero = () => {
     }
   }, [currentSlide, banners, isMobile, displayedImage])
 
-  // Preload the next image for smooth transitions
   useEffect(() => {
     if (banners.length === 0 || !displayedImage) return
     const nextIndex = (currentSlide + 1) % banners.length
@@ -72,7 +69,6 @@ const Hero = () => {
     }
   }, [currentSlide, banners, isMobile, displayedImage])
 
-  // Auto‑play
   useEffect(() => {
     if (banners.length <= 1) return
     const id = setInterval(() => setCurrentSlide((prev) => (prev + 1) % banners.length), 5000)
@@ -83,7 +79,6 @@ const Hero = () => {
   const prev = () => setCurrentSlide((s) => (s - 1 + banners.length) % banners.length)
   const next = () => setCurrentSlide((s) => (s + 1) % banners.length)
 
-  // Skeleton only while fetching data (no image loading wait)
   if (loading) {
     return (
       <section className="pt-[72px] md:pt-[80px] pb-2">
@@ -123,15 +118,31 @@ const Hero = () => {
   return (
     <section className="pt-[45px] md:pt-[50px] pb-2 w-full">
       <div className="relative w-full overflow-hidden">
-        <div className="relative w-full" style={{ minHeight: '250px', maxHeight: '500px' }}>
+        <div
+          className="relative w-full"
+          style={{
+            minHeight: '250px',
+            maxHeight: '500px',
+            transform: 'translate3d(0,0,0)',
+            willChange: 'transform',
+            backfaceVisibility: 'hidden',
+          }}
+        >
           {displayedImage && (
             <img
               src={displayedImage}
               alt={current.title || ''}
               loading={isFirstSlide ? 'eager' : 'lazy'}
               fetchPriority={isFirstSlide ? 'high' : 'auto'}
-              className="w-full h-full object-cover transition-opacity duration-700 ease-in-out"
-              style={{ minHeight: '250px', maxHeight: '500px', opacity: 1 }}
+              className="w-full h-full object-cover transition-opacity duration-300 ease-in-out"
+              style={{
+                minHeight: '250px',
+                maxHeight: '500px',
+                opacity: 1,
+                transform: 'translate3d(0,0,0)',
+                willChange: 'transform, opacity',
+                backfaceVisibility: 'hidden',
+              }}
             />
           )}
         </div>
@@ -143,7 +154,7 @@ const Hero = () => {
           <div className="absolute bottom-4 md:bottom-6 left-0 right-0 flex justify-center z-10">
             <Link
               to={current.buttonLink || '/shop'}
-              className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-bold px-4 py-2 md:px-6 md:py-3 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 text-xs sm:text-base"
+              className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-bold px-4 py-2 md:px-6 md:py-3 rounded-full shadow-lg hover:shadow-xl transition-all duration-200 text-xs sm:text-base"
             >
               {current.buttonText}
             </Link>
@@ -173,7 +184,7 @@ const Hero = () => {
               <button
                 key={i}
                 onClick={() => goToSlide(i)}
-                className={`transition-all duration-300 rounded-full ${
+                className={`transition-all duration-200 rounded-full ${
                   i === currentSlide
                     ? 'w-7 h-2 bg-blue-600'
                     : 'w-2 h-2 bg-gray-300 hover:bg-gray-500'
