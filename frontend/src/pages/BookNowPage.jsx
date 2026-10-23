@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { Helmet } from 'react-helmet-async' // ✅ Added Helmet for SEO
 import { motion, AnimatePresence } from 'framer-motion'
 import toast from 'react-hot-toast'
 import { 
@@ -639,6 +640,44 @@ const BookNowPage = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 pt-[65px] md:pt-[80px] pb-8 md:pb-12">
+      
+      {/* ✅ SEO / HELMET BLOCK */}
+      <Helmet>
+        <title>Book Appliance Repair Online | Same-Day Service | Spedy Service</title>
+        <meta name="description" content="Book professional home appliance repair in Bardhaman online. Fast, reliable, and affordable service for AC, refrigerator, washing machine, and more." />
+        <link rel="canonical" href="https://spedyservice.in/book-now" />
+        {/* Service Schema for Google */}
+        <script type="application/ld+json">
+          {`
+            {
+              "@context": "https://schema.org",
+              "@type": "WebPage",
+              "name": "Book Appliance Repair Online",
+              "description": "Book your appliance repair service online in Bardhaman.",
+              "mainEntity": {
+                "@type": "Service",
+                "serviceType": "Home Appliance Repair",
+                "provider": {
+                  "@type": "LocalBusiness",
+                  "name": "Spedy Service",
+                  "telephone": "+919609337633",
+                  "address": {
+                    "@type": "PostalAddress",
+                    "addressLocality": "Purba Bardhaman",
+                    "addressRegion": "West Bengal",
+                    "addressCountry": "IN"
+                  }
+                },
+                "areaServed": {
+                  "@type": "City",
+                  "name": "Purba Bardhaman"
+                }
+              }
+            }
+          `}
+        </script>
+      </Helmet>
+
       <div className="container-custom max-w-4xl mx-auto px-4">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
           <div className="text-center mb-6 md:mb-8">

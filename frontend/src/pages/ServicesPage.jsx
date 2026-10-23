@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
+import { Helmet } from 'react-helmet-async' // ✅ Added for SEO
 import { FaSearch, FaArrowRight } from 'react-icons/fa'
 import serviceService from '../services/serviceService'
 import ServiceCard from '../components/common/ServiceCard'
@@ -77,6 +78,45 @@ const ServicesPage = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      
+      {/* ✅ SEO / HELMET BLOCK */}
+      <Helmet>
+        <title>Expert Home Appliance Repair Services | AC, Fridge, Washing Machine | Spedy Service</title>
+        <meta name="description" content="Looking for professional home appliance repair? Spedy Service offers expert AC, refrigerator, washing machine, and TV repair in Bardhaman. Same-day service available." />
+        <link rel="canonical" href="https://spedyservice.in/services" />
+        
+        {/* Dynamic JSON-LD Schema for the Service List */}
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "ItemList",
+            "itemListElement": services.map((service, index) => ({
+              "@type": "ListItem",
+              "position": index + 1,
+              "item": {
+                "@type": "Service",
+                "name": `${service.name} Repair Service`,
+                "description": service.description,
+                "provider": {
+                  "@type": "LocalBusiness",
+                  "name": "Spedy Service",
+                  "telephone": "+919609337633",
+                  "address": {
+                    "@type": "PostalAddress",
+                    "addressLocality": "Purba Bardhaman",
+                    "addressRegion": "West Bengal",
+                    "addressCountry": "IN"
+                  }
+                },
+                "areaServed": {
+                  "@type": "City",
+                  "name": "Purba Bardhaman"
+                }
+              }
+            }))
+          })}
+        </script>
+      </Helmet>
 
       {/* Page Header – compact */}
       <div className="bg-white border-b border-gray-100 py-10 md:py-10">

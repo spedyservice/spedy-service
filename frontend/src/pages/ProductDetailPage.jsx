@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
+import { Helmet } from 'react-helmet-async' // ✅ Added for SEO
 import { motion } from 'framer-motion'
 import { FaStar, FaStarHalfAlt, FaRegStar, FaShoppingCart, FaArrowLeft, FaSpinner } from 'react-icons/fa'
 import productService from '../services/productService'
@@ -100,8 +101,50 @@ const ProductDetailPage = () => {
     )
   }
 
+  // ✅ Prepare Product Schema data
+  const productSchema = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    "name": product.name,
+    "image": product.images?.length > 0 ? product.images : ["https://spedyservice.in/logo.png"],
+    "description": product.description,
+    "sku": product._id,
+    "brand": {
+      "@type": "Brand",
+      "name": product.brand?.name || "Spedy Service"
+    },
+    "offers": {
+      "@type": "Offer",
+      "url": `https://spedyservice.in/product/${slug}`,
+      "priceCurrency": "INR",
+      "price": product.salePrice || product.price,
+      "availability": product.stock > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
+      "itemCondition": "https://schema.org/NewCondition"
+    }
+  }
+
+  // Add aggregate rating only if there are reviews
+  if (product.numReviews > 0 && product.rating > 0) {
+    productSchema.aggregateRating = {
+      "@type": "AggregateRating",
+      "ratingValue": product.rating,
+      "reviewCount": product.numReviews
+    }
+  }
+
   return (
-    <div className="min-h-screen bg-gray-50 pt-0"> {/* removed top padding */}
+    <div className="min-h-screen bg-gray-50 pt-0">
+      {/* ✅ SEO / HELMET BLOCK */}
+      <Helmet>
+        <title>{product.name} - Buy Online at Best Price | Spedy Service</title>
+        <meta name="description" content={`Buy ${product.name} online at Spedy Service. ${product.description?.substring(0, 100)}...`} />
+        <link rel="canonical" href={`https://spedyservice.in/product/${slug}`} />
+        {/* Dynamic Product Schema for Google Rich Results */}
+        <script type="application/ld+json">
+          {JSON.stringify(productSchema)}
+        </script>
+      </Helmet>
+
       <div className="max-w-7xl mx-auto px-3 sm:px-6 py-4 md:py-8">
         {/* Back link */}
         <Link to="/shop" className="inline-flex items-center gap-1.5 text-gray-600 hover:text-blue-600 mb-4 text-sm">
@@ -118,6 +161,7 @@ const ProductDetailPage = () => {
                   src={product.images?.[selectedImage] || 'https://via.placeholder.com/500'}
                   alt={product.name}
                   className="max-w-full max-h-full object-contain"
+                  loading="eager" // Main image should load eagerly
                 />
               </div>
               {product.images?.length > 1 && (
@@ -130,7 +174,7 @@ const ProductDetailPage = () => {
                         selectedImage === idx ? 'border-blue-600' : 'border-gray-200'
                       }`}
                     >
-                      <img src={img} alt="" className="w-full h-full object-cover" />
+                      <img src={img} alt={`${product.name} thumbnail ${idx + 1}`} className="w-full h-full object-cover" loading="lazy" />
                     </button>
                   ))}
                 </div>

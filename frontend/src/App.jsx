@@ -26,13 +26,10 @@ const CartPage = lazy(() => import('./pages/CartPage'));
 const CheckoutPage = lazy(() => import('./pages/CheckoutPage'));
 const OrderConfirmationPage = lazy(() => import('./pages/OrderConfirmationPage'));
 
-
-
 // Import these normally to avoid dynamic chunk errors
 import MyBookingsPage from './pages/MyBookingsPage';
 import MyOrdersPage from './pages/MyOrdersPage';
-import WhatsAppButton from './components/common/WhatsAppButton'
-
+import WhatsAppButton from './components/common/WhatsAppButton';
 
 // Admin pages (lazy)
 const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard'));
@@ -54,60 +51,31 @@ const PageLoader = () => (
   </div>
 );
 
-// SEO metadata for each page
+// ✅ ENHANCED SEO METADATA (Keyword optimized)
+const BASE_URL = 'https://spedyservice.in';
+const DEFAULT_IMAGE = `${BASE_URL}/logo.png`;
+
 const pageMeta = {
   home: {
-    title: 'Spedy Service – Home Appliance Repair & Sells | Trusted Service',
-    description: 'Fast, reliable home appliance repair and sells. AC, refrigerator, washing machine, TV repair. Book now!',
+    title: 'Spedy Service – Best Home Appliance Repair in Bardhaman | AC, Fridge, Washing Machine',
+    description: 'Spedy Service offers fast, reliable home appliance repair in Bardhaman and genuine products. Expert AC, refrigerator, washing machine, and TV repair. Book now!',
   },
   services: {
-    title: 'Our Services – Spedy Service | Professional Appliance Repair',
-    description: 'Expert repair services for AC, refrigerator, washing machine, TV, and more. Trusted professionals, same-day service.',
+    title: 'Professional Appliance Repair Services | AC, Fridge, Washing Machine | Spedy Service',
+    description: 'Expert repair services for AC, refrigerator, washing machine, TV, and more in Bardhaman. Trusted professionals, same-day service, and genuine parts.',
   },
   shop: {
-    title: 'Shop Appliances – Spedy Service | Genuine Products',
+    title: 'Buy Home Appliances Online | Spedy Service',
     description: 'Buy genuine home appliances at best prices. AC, refrigerator, washing machine, TV, and more. Free delivery on orders above ₹1000.',
   },
   bookNow: {
-    title: 'Book a Repair – Spedy Service | Quick & Reliable',
-    description: 'Book your appliance repair service online. Professional technicians, genuine parts, and fast response.',
+    title: 'Book Appliance Repair Online | Same-Day Service | Spedy Service',
+    description: 'Book your appliance repair service online in Bardhaman. Professional technicians, genuine parts, and fast response.',
   },
   contact: {
-    title: 'Contact Us – Spedy Service | 24/7 Support',
+    title: 'Contact Us – Spedy Service | 24/7 Appliance Repair Support',
     description: 'Reach out to us for queries, support, or service booking. Call +91 96093 37633 or email spedyservice40@gmail.com.',
-  },
-  login: {
-    title: 'Login – Spedy Service | Sign in to your account',
-    description: 'Login to your Spedy Service account to manage bookings, orders, and profile.',
-  },
-  register: {
-    title: 'Register – Spedy Service | Create Account',
-    description: 'Create an account with Spedy Service for fast booking and order tracking.',
-  },
-  myBookings: {
-    title: 'My Bookings – Spedy Service | Track Your Services',
-    description: 'View and manage all your service bookings. Track status, leave reviews, and more.',
-  },
-  myOrders: {
-    title: 'My Orders – Spedy Service | Track Orders',
-    description: 'View your purchase history and order status. Track deliveries and manage orders.',
-  },
-  cart: {
-    title: 'Cart – Spedy Service | Your Shopping Cart',
-    description: 'Review your cart items and proceed to checkout. Genuine products with best prices.',
-  },
-  checkout: {
-    title: 'Checkout – Spedy Service | Secure Checkout',
-    description: 'Complete your order securely. Free delivery on orders above ₹1000.',
-  },
-  profile: {
-    title: 'My Profile – Spedy Service | Account Settings',
-    description: 'Manage your profile, address, and password settings.',
-  },
-  authCallback: {
-    title: 'Completing Sign In – Spedy Service',
-    description: 'Please wait while we complete your sign-in process.',
-  },
+  }
 };
 
 function App() {
@@ -115,23 +83,13 @@ function App() {
 
   const hideNavbarFooter = ['/login', '/register'];
   const adminRoutes = [
-    '/admin',
-    '/admin/bookings',
-    '/admin/services',
-    '/admin/brands',
-    '/admin/banners',
-    '/admin/videos',
-    '/admin/popup-banners',
-    '/admin/users',
-    '/admin/settings',
-    '/admin/categories',
-    '/admin/products',
-    '/admin/orders',
+    '/admin', '/admin/bookings', '/admin/services', '/admin/brands', '/admin/banners', 
+    '/admin/videos', '/admin/popup-banners', '/admin/users', '/admin/settings', 
+    '/admin/categories', '/admin/products', '/admin/orders',
   ];
   const isAdminRoute = adminRoutes.some((route) => location.pathname.startsWith(route));
   const shouldHideNavbarFooter = hideNavbarFooter.includes(location.pathname) || isAdminRoute;
 
-  // ✅ Check if we are on the home page
   const isHomePage = location.pathname === '/';
 
   const hideFooter =
@@ -151,7 +109,7 @@ function App() {
     window.scrollTo(0, 0);
   }, [location.pathname]);
 
-  // Admin routes – also add a Helmet for admin pages
+  // Admin routes – strictly NO INDEX
   if (isAdminRoute) {
     return (
       <AdminRoute>
@@ -181,13 +139,15 @@ function App() {
     );
   }
 
-  // Public routes – with SEO metadata
+  // Public routes – with dynamic SEO metadata
   return (
     <div className="min-h-screen flex flex-col">
       {!shouldHideNavbarFooter && <Navbar />}
       <main className={`flex-grow ${!shouldHideNavbarFooter ? 'pt-[60px] md:pt-[80px]' : ''}`}>
         <Suspense fallback={<PageLoader />}>
           <Routes>
+            
+            {/* === HOME PAGE === */}
             <Route
               path="/"
               element={
@@ -195,12 +155,25 @@ function App() {
                   <Helmet>
                     <title>{pageMeta.home.title}</title>
                     <meta name="description" content={pageMeta.home.description} />
-                    <link rel="canonical" href="https://spedyservice.in" />
+                    <link rel="canonical" href={BASE_URL} />
+                    {/* Open Graph */}
+                    <meta property="og:title" content={pageMeta.home.title} />
+                    <meta property="og:description" content={pageMeta.home.description} />
+                    <meta property="og:url" content={BASE_URL} />
+                    <meta property="og:image" content={DEFAULT_IMAGE} />
+                    <meta property="og:type" content="website" />
+                    {/* Twitter */}
+                    <meta name="twitter:card" content="summary_large_image" />
+                    <meta name="twitter:title" content={pageMeta.home.title} />
+                    <meta name="twitter:description" content={pageMeta.home.description} />
+                    <meta name="twitter:image" content={DEFAULT_IMAGE} />
                   </Helmet>
                   <HomePage />
                 </>
               }
             />
+
+            {/* === SERVICES PAGE === */}
             <Route
               path="/services"
               element={
@@ -208,11 +181,20 @@ function App() {
                   <Helmet>
                     <title>{pageMeta.services.title}</title>
                     <meta name="description" content={pageMeta.services.description} />
+                    <link rel="canonical" href={`${BASE_URL}/services`} />
+                    {/* Open Graph */}
+                    <meta property="og:title" content={pageMeta.services.title} />
+                    <meta property="og:description" content={pageMeta.services.description} />
+                    <meta property="og:url" content={`${BASE_URL}/services`} />
+                    <meta property="og:image" content={DEFAULT_IMAGE} />
+                    <meta property="og:type" content="website" />
                   </Helmet>
                   <ServicesPage />
                 </>
               }
             />
+
+            {/* === SHOP PAGE === */}
             <Route
               path="/shop"
               element={
@@ -220,11 +202,18 @@ function App() {
                   <Helmet>
                     <title>{pageMeta.shop.title}</title>
                     <meta name="description" content={pageMeta.shop.description} />
+                    <link rel="canonical" href={`${BASE_URL}/shop`} />
+                    <meta property="og:title" content={pageMeta.shop.title} />
+                    <meta property="og:description" content={pageMeta.shop.description} />
+                    <meta property="og:url" content={`${BASE_URL}/shop`} />
+                    <meta property="og:image" content={DEFAULT_IMAGE} />
                   </Helmet>
                   <ShopPage />
                 </>
               }
             />
+
+            {/* === BOOK NOW PAGE === */}
             <Route
               path="/book-now"
               element={
@@ -232,11 +221,17 @@ function App() {
                   <Helmet>
                     <title>{pageMeta.bookNow.title}</title>
                     <meta name="description" content={pageMeta.bookNow.description} />
+                    <link rel="canonical" href={`${BASE_URL}/book-now`} />
+                    <meta property="og:title" content={pageMeta.bookNow.title} />
+                    <meta property="og:description" content={pageMeta.bookNow.description} />
+                    <meta property="og:url" content={`${BASE_URL}/book-now`} />
                   </Helmet>
                   <BookNowPage />
                 </>
               }
             />
+
+            {/* === CONTACT PAGE === */}
             <Route
               path="/contact"
               element={
@@ -244,18 +239,35 @@ function App() {
                   <Helmet>
                     <title>{pageMeta.contact.title}</title>
                     <meta name="description" content={pageMeta.contact.description} />
+                    <link rel="canonical" href={`${BASE_URL}/contact`} />
                   </Helmet>
                   <ContactPage />
                 </>
               }
             />
+
+            {/* === PRODUCT DETAIL PAGE === */}
+            <Route
+              path="/product/:slug"
+              element={
+                <>
+                  <Helmet>
+                    <title>Product Details – Spedy Service</title>
+                    <meta name="description" content="View product details, price, and buy genuine appliances online." />
+                    <link rel="canonical" href={`${BASE_URL}${location.pathname}`} />
+                  </Helmet>
+                  <ProductDetailPage />
+                </>
+              }
+            />
+
+            {/* === AUTH PAGES (NO INDEX) === */}
             <Route
               path="/login"
               element={
                 <>
                   <Helmet>
-                    <title>{pageMeta.login.title}</title>
-                    <meta name="description" content={pageMeta.login.description} />
+                    <title>Login – Spedy Service</title>
                     <meta name="robots" content="noindex, nofollow" />
                   </Helmet>
                   <LoginPage />
@@ -267,8 +279,7 @@ function App() {
               element={
                 <>
                   <Helmet>
-                    <title>{pageMeta.register.title}</title>
-                    <meta name="description" content={pageMeta.register.description} />
+                    <title>Register – Spedy Service</title>
                     <meta name="robots" content="noindex, nofollow" />
                   </Helmet>
                   <RegisterPage />
@@ -304,7 +315,7 @@ function App() {
               element={
                 <>
                   <Helmet>
-                    <title>{pageMeta.authCallback.title}</title>
+                    <title>Completing Sign In – Spedy Service</title>
                     <meta name="robots" content="noindex, nofollow" />
                   </Helmet>
                   <AuthCallbackPage />
@@ -312,13 +323,14 @@ function App() {
               }
             />
 
+            {/* === PROTECTED / USER PAGES (NO INDEX) === */}
             <Route
               path="/my-bookings"
               element={
                 <ProtectedRoute>
                   <Helmet>
-                    <title>{pageMeta.myBookings.title}</title>
-                    <meta name="description" content={pageMeta.myBookings.description} />
+                    <title>My Bookings – Spedy Service</title>
+                    <meta name="robots" content="noindex, nofollow" />
                   </Helmet>
                   <MyBookingsPage />
                 </ProtectedRoute>
@@ -330,7 +342,7 @@ function App() {
                 <ProtectedRoute>
                   <Helmet>
                     <title>Booking Details – Spedy Service</title>
-                    <meta name="description" content="View your booking details, status, and manage your service request." />
+                    <meta name="robots" content="noindex, nofollow" />
                   </Helmet>
                   <BookingDetailPage />
                 </ProtectedRoute>
@@ -341,23 +353,11 @@ function App() {
               element={
                 <ProtectedRoute>
                   <Helmet>
-                    <title>{pageMeta.profile.title}</title>
-                    <meta name="description" content={pageMeta.profile.description} />
+                    <title>My Profile – Spedy Service</title>
+                    <meta name="robots" content="noindex, nofollow" />
                   </Helmet>
                   <ProfilePage />
                 </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/product/:slug"
-              element={
-                <>
-                  <Helmet>
-                    <title>Product Details – Spedy Service</title>
-                    <meta name="description" content="View product details, price, and buy genuine appliances online." />
-                  </Helmet>
-                  <ProductDetailPage />
-                </>
               }
             />
             <Route
@@ -365,8 +365,8 @@ function App() {
               element={
                 <ProtectedRoute>
                   <Helmet>
-                    <title>{pageMeta.cart.title}</title>
-                    <meta name="description" content={pageMeta.cart.description} />
+                    <title>Cart – Spedy Service</title>
+                    <meta name="robots" content="noindex, nofollow" />
                   </Helmet>
                   <CartPage />
                 </ProtectedRoute>
@@ -377,8 +377,8 @@ function App() {
               element={
                 <ProtectedRoute>
                   <Helmet>
-                    <title>{pageMeta.checkout.title}</title>
-                    <meta name="description" content={pageMeta.checkout.description} />
+                    <title>Checkout – Spedy Service</title>
+                    <meta name="robots" content="noindex, nofollow" />
                   </Helmet>
                   <CheckoutPage />
                 </ProtectedRoute>
@@ -390,7 +390,7 @@ function App() {
                 <ProtectedRoute>
                   <Helmet>
                     <title>Order Details – Spedy Service</title>
-                    <meta name="description" content="View your order details, status, and track delivery." />
+                    <meta name="robots" content="noindex, nofollow" />
                   </Helmet>
                   <OrderConfirmationPage />
                 </ProtectedRoute>
@@ -401,8 +401,8 @@ function App() {
               element={
                 <ProtectedRoute>
                   <Helmet>
-                    <title>{pageMeta.myOrders.title}</title>
-                    <meta name="description" content={pageMeta.myOrders.description} />
+                    <title>My Orders – Spedy Service</title>
+                    <meta name="robots" content="noindex, nofollow" />
                   </Helmet>
                   <MyOrdersPage />
                 </ProtectedRoute>
@@ -413,7 +413,6 @@ function App() {
       </main>
       {!shouldHideNavbarFooter && !hideFooter && <Footer />}
       <PopupBanner />
-      {/* ✅ Render WhatsApp Button ONLY on the home page */}
       {isHomePage && <WhatsAppButton />}
     </div>
   );

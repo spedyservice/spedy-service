@@ -2,12 +2,11 @@ import React, { useState, useRef, useEffect, useCallback } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import {
-  FaHome, FaWrench, FaCalendarAlt, FaEnvelope,
   FaUser, FaSignOutAlt, FaBars, FaTimes,
   FaUserPlus,
   FaChevronDown, FaMapMarkerAlt, FaKey,
   FaClipboardList, FaTachometerAlt, FaPhone,
-  FaShoppingBag, FaShoppingCart, FaSearch
+  FaShoppingBag, FaShoppingCart
 } from 'react-icons/fa'
 import { motion, AnimatePresence } from 'framer-motion'
 import cartService from '../../services/cartService'
@@ -80,10 +79,8 @@ const Navbar = () => {
   const dropdownRef = useRef(null)
   const mobileDropdownRef = useRef(null)
   const [cartCount, setCartCount] = useState(0)
-  const [searchQuery, setSearchQuery] = useState('')
   const [scrollY, setScrollY] = useState(0)
   const [msgIndex, setMsgIndex] = useState(0)
-  const [showMobileSearch, setShowMobileSearch] = useState(false)
 
   // ---------- Cart count ----------
   const fetchCartCount = useCallback(async () => {
@@ -119,7 +116,7 @@ const Navbar = () => {
     return () => document.removeEventListener('mousedown', cb)
   }, [])
 
-  useEffect(() => { setIsDropdownOpen(false); setIsOpen(false); setIsMobileDropdownOpen(false); setShowMobileSearch(false) }, [location.pathname])
+  useEffect(() => { setIsDropdownOpen(false); setIsOpen(false); setIsMobileDropdownOpen(false); }, [location.pathname])
 
   // ---------- Scroll detection for glass effect ----------
   useEffect(() => {
@@ -140,15 +137,6 @@ const Navbar = () => {
     setIsOpen(false)
     setIsDropdownOpen(false)
     setIsMobileDropdownOpen(false)
-  }
-
-  const handleSearch = (e) => {
-    e.preventDefault()
-    if (searchQuery.trim()) {
-      navigate(`/shop?search=${encodeURIComponent(searchQuery.trim())}`)
-      setSearchQuery('')
-      setShowMobileSearch(false)
-    }
   }
 
   // ✅ Changed "Shop" to "Sells" in navigation links
@@ -202,12 +190,6 @@ const Navbar = () => {
                 className="p-1.5 text-gray-700 hover:bg-gray-100 rounded-lg"
               >
                 {isOpen ? <FaTimes size={20} /> : <FaBars size={20} />}
-              </button>
-              <button
-                onClick={() => setShowMobileSearch(!showMobileSearch)}
-                className="p-1.5 text-gray-700 hover:bg-gray-100 rounded-lg"
-              >
-                <FaSearch size={18} />
               </button>
             </div>
 
@@ -317,17 +299,6 @@ const Navbar = () => {
             </nav>
 
             <div className="flex items-center gap-3">
-              <form onSubmit={handleSearch} className="flex items-center bg-gray-100 rounded-full px-3 py-2">
-                <FaSearch className="text-gray-400 text-xs mr-2" />
-                <input
-                  type="text"
-                  placeholder="Search products…"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="bg-transparent outline-none text-sm w-28 lg:w-40 text-gray-700 placeholder-gray-400"
-                />
-              </form>
-
               <Link to="/cart" className="relative p-2 text-gray-700 hover:text-blue-600 transition-colors">
                 <FaShoppingCart size={20} />
                 {cartCount > 0 && (
@@ -375,31 +346,6 @@ const Navbar = () => {
             </div>
           </div>
         </div>
-
-        {/* Mobile search input */}
-        <AnimatePresence>
-          {showMobileSearch && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              transition={{ duration: 0.2 }}
-              className="lg:hidden border-t border-gray-200 px-4 py-2"
-            >
-              <form onSubmit={handleSearch} className="flex items-center bg-gray-100 rounded-full px-3 py-2">
-                <FaSearch className="text-gray-400 text-xs mr-2" />
-                <input
-                  type="text"
-                  placeholder="Search products…"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  autoFocus
-                  className="bg-transparent outline-none text-sm w-full text-gray-700 placeholder-gray-400"
-                />
-              </form>
-            </motion.div>
-          )}
-        </AnimatePresence>
       </div>
 
       {/* ── MOBILE MENU (no gap) ── */}
