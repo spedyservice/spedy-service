@@ -131,6 +131,9 @@ function App() {
   const isAdminRoute = adminRoutes.some((route) => location.pathname.startsWith(route));
   const shouldHideNavbarFooter = hideNavbarFooter.includes(location.pathname) || isAdminRoute;
 
+  // ✅ Check if we are on the home page
+  const isHomePage = location.pathname === '/';
+
   const hideFooter =
     location.pathname.startsWith('/product/') ||
     location.pathname === '/cart' ||
@@ -410,7 +413,8 @@ function App() {
       </main>
       {!shouldHideNavbarFooter && !hideFooter && <Footer />}
       <PopupBanner />
-      <WhatsAppButton />
+      {/* ✅ Render WhatsApp Button ONLY on the home page */}
+      {isHomePage && <WhatsAppButton />}
     </div>
   );
 }
